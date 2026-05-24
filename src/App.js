@@ -45,8 +45,8 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(''), 2000);
   }, []);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const [p, i, r, pl1, pl2, pl3, pl4] = await Promise.all([
@@ -99,6 +99,16 @@ export default function App() {
   const addIngrediente = async (data) => {
     await api.addIngrediente(data);
     await loadData();
+  };
+
+  const deletePlato = async (id) => {
+    await api.deletePlato(id);
+    await loadData(true);
+  };
+
+  const deleteIngrediente = async (id) => {
+    await api.deleteIngrediente(id);
+    await loadData(true);
   };
 
   const updateReceta = async (id, platoData, ingRows) => {
@@ -184,6 +194,7 @@ export default function App() {
                 recetas={recetas}
                 onAnadir={() => setCatalogoView('add')}
                 onEditar={(plato) => { setEditingPlato(plato); setCatalogoView('edit'); }}
+                onDelete={deletePlato}
               />
             )}
             {tab === 'catalogo' && catalogoView === 'add' && (
@@ -208,6 +219,7 @@ export default function App() {
                 ingredientes={ingredientes}
                 onUpdate={updateIngrediente}
                 onAdd={addIngrediente}
+                onDelete={deleteIngrediente}
               />
             )}
           </>

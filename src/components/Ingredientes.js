@@ -1,12 +1,27 @@
 import React, { useState, useMemo } from 'react';
 
-export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
+export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
   const [view, setView] = useState('list'); // 'list' | 'add' | 'edit'
   const [editingIng, setEditingIng] = useState(null);
   const [form, setForm] = useState({ nombre: '', unidad: 'ud', categoria: '' });
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await onDelete(editingIng.id);
+      setConfirmDelete(false);
+      setView('list');
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const cats = useMemo(() => {
     const set = new Set(ingredientes.map(i => i.categoria).filter(Boolean));
@@ -115,7 +130,29 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
           <button className="btn-primary" onClick={handleSave} disabled={saving || !form.nombre.trim()} style={{ marginTop: 8 }}>
             {saving ? 'Guardando…' : view === 'edit' ? '💾 Guardar cambios' : '✚ Añadir ingrediente'}
           </button>
+          {view === 'edit' && (
+            <button className="btn-danger" onClick={() => setConfirmDelete(true)} style={{ marginTop: 8, width: '100%' }}>
+              🗑️ Eliminar ingrediente
+            </button>
+          )}
         </div>
+
+        {confirmDelete && (
+          <div className="modal-overlay centered" onClick={() => setConfirmDelete(false)}>
+            <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+              <div className="confirm-title">¿Eliminar ingrediente?</div>
+              <div className="confirm-body">
+                Se eliminará <strong>{editingIng.nombre}</strong>. Esta acción no se puede deshacer.
+              </div>
+              <div className="confirm-btns">
+                <button className="btn-secondary" onClick={() => setConfirmDelete(false)}>Cancelar</button>
+                <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Eliminando…' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }

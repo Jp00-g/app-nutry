@@ -1,6 +1,6 @@
 import {
   collection, doc, getDocs, getDoc,
-  setDoc, addDoc, updateDoc,
+  setDoc, addDoc, updateDoc, deleteDoc,
   writeBatch, query, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -53,6 +53,17 @@ export const api = {
   },
 
   updatePlato: (id, data) => updateDoc(doc(db, 'platos', id), data),
+
+  deletePlato: async (id) => {
+    const q = query(collection(db, 'recetas'), where('idPlato', '==', id));
+    const snap = await getDocs(q);
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => batch.delete(d.ref));
+    batch.delete(doc(db, 'platos', id));
+    await batch.commit();
+  },
+
+  deleteIngrediente: (id) => deleteDoc(doc(db, 'ingredientes', id)),
 
   updateRecetaIngredientes: async (platoId, ingredientes) => {
     const q = query(collection(db, 'recetas'), where('idPlato', '==', platoId));

@@ -8,11 +8,26 @@ const CAT_CLASS = {
 
 const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos'];
 
-export default function Catalogo({ platos, recetas, onAnadir, onEditar }) {
+export default function Catalogo({ platos, recetas, onAnadir, onEditar, onDelete }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
   const [momentoFilter, setMomentoFilter] = useState('Todos');
   const [open, setOpen] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // plato object
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await onDelete(confirmDelete.id);
+      setConfirmDelete(null);
+      setOpen(null);
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const cats = ['Todas', ...new Set(platos.map(p => p.categoria))];
 
@@ -78,6 +93,13 @@ export default function Catalogo({ platos, recetas, onAnadir, onEditar }) {
                 <span className={`chip ${CAT_CLASS[plato.categoria] || ''}`}>{plato.categoria}</span>
                 <span className="plato-card-name">{plato.nombre}</span>
                 <button
+                  className="btn-danger"
+                  style={{ padding: '4px 10px', fontSize: 12 }}
+                  onClick={e => { e.stopPropagation(); setConfirmDelete(plato); }}
+                >
+                  🗑️
+                </button>
+                <button
                   className="btn-secondary"
                   style={{ padding: '4px 10px', fontSize: 12 }}
                   onClick={e => { e.stopPropagation(); onEditar(plato); }}
@@ -118,6 +140,23 @@ export default function Catalogo({ platos, recetas, onAnadir, onEditar }) {
         )}
 
       </div>
+
+      {confirmDelete && (
+        <div className="modal-overlay centered" onClick={() => setConfirmDelete(null)}>
+          <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+            <div className="confirm-title">¿Eliminar receta?</div>
+            <div className="confirm-body">
+              Se eliminará <strong>{confirmDelete.nombre}</strong> y todos sus ingredientes. Esta acción no se puede deshacer.
+            </div>
+            <div className="confirm-btns">
+              <button className="btn-secondary" onClick={() => setConfirmDelete(null)}>Cancelar</button>
+              <button className="btn-danger" onClick={handleDelete} disabled={deleting}>
+                {deleting ? 'Eliminando…' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
