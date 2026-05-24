@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const MOMENTOS_OPT = ['Comidas', 'Cenas'];
+const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos'];
 const CATS_COMIDA = ['CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'OTROS'];
 const CATS_CENA = ['WRAP', 'ENSALADAS', 'CUCHARA', 'TOSTAS/SANDWICH', 'PLATO', 'CARNES'];
+const CATS_DESAYUNO = ['DULCE', 'SALADO', 'SMOOTHIE', 'OTROS'];
 
 export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
   const [nombre, setNombre] = useState('');
@@ -38,7 +39,7 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
     return acc;
   }, {});
 
-  const cats = momento === 'Comidas' ? CATS_COMIDA : CATS_CENA;
+  const cats = momento === 'Comidas' ? CATS_COMIDA : momento === 'Desayunos' ? CATS_DESAYUNO : CATS_CENA;
 
   const addIngRow = () => {
     if (!selIng || !selCant) return;
@@ -79,7 +80,12 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
 
   return (
     <>
-      <p className="section-title">Nueva receta</p>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
+        <p className="section-title" style={{ padding: 0, flex: 1 }}>Nueva receta</p>
+        <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onDone}>
+          Volver
+        </button>
+      </div>
       <p className="section-sub">Rellena los datos y los ingredientes</p>
 
       <div className="anadir-wrap">

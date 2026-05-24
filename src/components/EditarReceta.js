@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const MOMENTOS_OPT = ['Comidas', 'Cenas'];
+const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos'];
 const CATS_COMIDA = ['CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'OTROS'];
 const CATS_CENA = ['WRAP', 'ENSALADAS', 'CUCHARA', 'TOSTAS/SANDWICH', 'PLATO', 'CARNES'];
+const CATS_DESAYUNO = ['DULCE', 'SALADO', 'SMOOTHIE', 'OTROS'];
 
-export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpdate, onDone }) {
+export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpdate, onDone, onToast }) {
   const [nombre, setNombre] = useState(plato.nombre);
   const [momento, setMomento] = useState(plato.momento);
   const [categoria, setCategoria] = useState(plato.categoria);
@@ -31,7 +32,7 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpda
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const cats = momento === 'Comidas' ? CATS_COMIDA : CATS_CENA;
+  const cats = momento === 'Comidas' ? CATS_COMIDA : momento === 'Desayunos' ? CATS_DESAYUNO : CATS_CENA;
 
   const selectedIng = ingredientes.find(i => String(i.id) === selIng);
 
@@ -63,9 +64,10 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpda
     setSaving(true);
     try {
       await onUpdate(plato.id, { nombre: nombre.trim(), momento, categoria }, ingRows);
-      onDone();
+      onToast('✓ Receta actualizada correctamente');
     } catch (e) {
       alert('Error al guardar: ' + e.message);
+    } finally {
       setSaving(false);
     }
   };
@@ -75,7 +77,7 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpda
       <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
         <p className="section-title" style={{ padding: 0, flex: 1 }}>Editar receta</p>
         <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={onDone}>
-          Cancelar
+          Volver
         </button>
       </div>
       <p className="section-sub">Modifica los datos y pulsa guardar</p>

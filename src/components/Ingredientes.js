@@ -3,8 +3,9 @@ import React, { useState, useMemo } from 'react';
 export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
-  const [modal, setModal] = useState(null); // { mode: 'edit'|'add', ing? }
-  const [form, setForm] = useState({ nombre: '', unidad: '', categoria: '' });
+  const [view, setView] = useState('list'); // 'list' | 'add' | 'edit'
+  const [editingIng, setEditingIng] = useState(null);
+  const [form, setForm] = useState({ nombre: '', unidad: 'ud', categoria: '' });
   const [saving, setSaving] = useState(false);
 
   const cats = useMemo(() => {
@@ -30,32 +31,94 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
   }, [filtered]);
 
   const openEdit = (ing) => {
-    setForm({ nombre: ing.nombre, unidad: ing.unidad, categoria: ing.categoria });
-    setModal({ mode: 'edit', ing });
+    setForm({ nombre: ing.nombre, unidad: ing.unidad || 'ud', categoria: ing.categoria || '' });
+    setEditingIng(ing);
+    setView('edit');
   };
 
   const openAdd = () => {
-    setForm({ nombre: '', unidad: '', categoria: catFilter === 'Todo' ? '' : catFilter });
-    setModal({ mode: 'add' });
+    setForm({ nombre: '', unidad: 'ud', categoria: catFilter === 'Todo' ? '' : catFilter });
+    setEditingIng(null);
+    setView('add');
   };
-
-  const closeModal = () => { setModal(null); setSaving(false); };
 
   const handleSave = async () => {
     if (!form.nombre.trim()) return;
     setSaving(true);
     try {
-      if (modal.mode === 'edit') {
-        await onUpdate(modal.ing.id, form);
+      if (view === 'edit') {
+        await onUpdate(editingIng.id, form);
       } else {
         await onAdd(form);
       }
-      closeModal();
+      setView('list');
     } catch (e) {
       alert('Error: ' + e.message);
+    } finally {
       setSaving(false);
     }
   };
+
+  if (view === 'add' || view === 'edit') {
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
+          <p className="section-title" style={{ padding: 0, flex: 1 }}>
+            {view === 'edit' ? 'Editar ingrediente' : 'Nuevo ingrediente'}
+          </p>
+          <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => setView('list')}>
+            Volver
+          </button>
+        </div>
+        <p className="section-sub">
+          {view === 'edit' ? 'Modifica los datos y guarda' : 'Rellena los datos del ingrediente'}
+        </p>
+
+        <div className="anadir-wrap">
+          <div className="form-group">
+            <label>Nombre</label>
+            <input
+              value={form.nombre}
+              onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+              placeholder="ej. Pechuga de pollo"
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Unidad</label>
+            <select
+              value={form.unidad}
+              onChange={e => setForm(f => ({ ...f, unidad: e.target.value }))}
+            >
+              <option value="ud">ud</option>
+              <option value="g">g</option>
+              <option value="kg">kg</option>
+              <option value="ml">ml</option>
+              <option value="L">L</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Categoría</label>
+            <select
+              value={form.categoria}
+              onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
+            >
+              <option value="">-- Selecciona --</option>
+              {cats.filter(c => c !== 'Todo').map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <button className="btn-primary" onClick={handleSave} disabled={saving || !form.nombre.trim()} style={{ marginTop: 8 }}>
+            {saving ? 'Guardando…' : view === 'edit' ? '💾 Guardar cambios' : '✚ Añadir ingrediente'}
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -107,58 +170,7 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
             <p>Sin resultados</p>
           </div>
         )}
-
       </div>
-
-      {modal && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-            <div className="modal-handle" />
-            <div className="modal-header">
-              <span className="modal-title">
-                {modal.mode === 'edit' ? 'Editar ingrediente' : 'Nuevo ingrediente'}
-              </span>
-              <button className="modal-close" onClick={closeModal}>✕</button>
-            </div>
-
-            <div style={{ padding: '0 16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div className="form-group">
-                <label>Nombre</label>
-                <input
-                  value={form.nombre}
-                  onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-                  placeholder="ej. Pechuga de pollo"
-                  autoFocus
-                />
-              </div>
-              <div className="form-group">
-                <label>Unidad</label>
-                <select
-                  value={form.unidad}
-                  onChange={e => setForm(f => ({ ...f, unidad: e.target.value }))}
-                >
-                  <option value="ud">ud</option>
-                  <option value="g">g</option>
-                  <option value="kg">kg</option>
-                  <option value="ml">ml</option>
-                  <option value="L">L</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Categoría</label>
-                <input
-                  value={form.categoria}
-                  onChange={e => setForm(f => ({ ...f, categoria: e.target.value }))}
-                  placeholder="ej. Carnes, Verduras…"
-                />
-              </div>
-              <button className="btn-primary" onClick={handleSave} disabled={saving || !form.nombre.trim()}>
-                {saving ? 'Guardando…' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

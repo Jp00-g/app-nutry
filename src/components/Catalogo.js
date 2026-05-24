@@ -6,9 +6,12 @@ const CAT_CLASS = {
   WRAP: 'cat-wrap', PLATO: 'cat-otros',
 };
 
+const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos'];
+
 export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEditar }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
+  const [momentoFilter, setMomentoFilter] = useState('Todos');
   const [open, setOpen] = useState(null);
 
   const cats = ['Todas', ...new Set(platos.map(p => p.categoria))];
@@ -16,7 +19,8 @@ export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEd
   const filtered = platos.filter(p => {
     const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
     const matchCat = catFilter === 'Todas' || p.categoria === catFilter;
-    return matchSearch && matchCat;
+    const matchMomento = momentoFilter === 'Todos' || p.momento === momentoFilter;
+    return matchSearch && matchCat && matchMomento;
   });
 
   const getRecetasPlato = (platoId) => {
@@ -43,6 +47,18 @@ export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEd
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar plato…"
           />
+        </div>
+
+        <div className="catalogo-cats">
+          {MOMENTOS.map(m => (
+            <button
+              key={m}
+              className={`cat-filter ${momentoFilter === m ? 'active' : ''}`}
+              onClick={() => { setMomentoFilter(m); setCatFilter('Todas'); }}
+            >
+              {m}
+            </button>
+          ))}
         </div>
 
         <div className="catalogo-cats">

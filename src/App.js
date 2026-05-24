@@ -35,6 +35,14 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState('');
+  const toastTimer = React.useRef(null);
+
+  const showToast = useCallback((msg) => {
+    clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = setTimeout(() => setToast(''), 2000);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -129,6 +137,8 @@ export default function App() {
         </div>
       </header>
 
+      <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
+
       {/* Content */}
       <main className="app-main">
 
@@ -187,6 +197,7 @@ export default function App() {
                 ingredientes={ingredientes}
                 onUpdate={updateReceta}
                 onDone={() => { setEditingPlato(null); setCatalogoView('list'); }}
+                onToast={showToast}
               />
             )}
             {tab === 'ingredientes' && (
