@@ -43,9 +43,11 @@ function handleRequest(e) {
       case 'getPlanSemanal':  return ok(getPlanSemanal());
       case 'setPlanSemanal':  return ok(setPlanSemanal(body.plan));
       case 'addPlato':          return ok(addPlato(body.plato, body.ingredientes));
-      case 'updateIngrediente': return ok(updateIngrediente(body.id, body.nombre, body.unidad, body.categoria));
-      case 'addIngrediente':    return ok(addIngrediente(body.nombre, body.unidad, body.categoria));
-      default:                  return err('Acción desconocida: ' + action);
+      case 'updateIngrediente':      return ok(updateIngrediente(body.id, body.nombre, body.unidad, body.categoria));
+      case 'addIngrediente':         return ok(addIngrediente(body.nombre, body.unidad, body.categoria));
+      case 'updatePlato':            return ok(updatePlato(body.id, body.nombre, body.momento, body.categoria));
+      case 'updateRecetaIngredientes': return ok(updateRecetaIngredientes(body.platoId, body.ingredientes));
+      default:                       return err('Acción desconocida: ' + action);
     }
   } catch (ex) {
     return err(ex.message);
@@ -163,6 +165,48 @@ function addPlato(platoData, ingredientesData) {
   }
 
   return { id: newId };
+}
+
+// ── PLATOS (UPDATE) ─────────────────────────────────────────────────
+function updatePlato(id, nombre, momento, categoria) {
+  const sheet = getSheet('Platos');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) {
+      sheet.getRange(i + 1, 2, 1, 3).setValues([[nombre, momento, categoria]]);
+      return { id };
+    }
+  }
+  throw new Error('Plato no encontrado: ' + id);
+}
+
+function updateRecetaIngredientes(platoId, ingredientes) {
+  const recetasSheet = getSheet('Recetas');
+  const data = recetasSheet.getDataRange().getValues();
+
+  // Collect row indices to delete (1-indexed), bottom to top
+  const toDelete = [];
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(platoId)) toDelete.push(i + 1);
+  }
+  for (let i = toDelete.length - 1; i >= 0; i--) {
+    recetasSheet.deleteRow(toDelete[i]);
+  }
+
+  // Get plato nombre for denormalized column
+  const platosSheet = getSheet('Platos');
+  const platosData = platosSheet.getDataRange().getValues();
+  let nombrePlato = '';
+  for (let i = 1; i < platosData.length; i++) {
+    if (String(platosData[i][0]) === String(platoId)) { nombrePlato = platosData[i][1]; break; }
+  }
+
+  if (Array.isArray(ingredientes)) {
+    ingredientes.forEach(ing => {
+      recetasSheet.appendRow([platoId, nombrePlato, ing.id, ing.nombre, ing.cantidad, ing.unidad, ing.notas || '']);
+    });
+  }
+  return true;
 }
 
 // ── INGREDIENTES (CRUD) ─────────────────────────────────────────────

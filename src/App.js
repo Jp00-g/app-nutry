@@ -4,6 +4,7 @@ import PlanSemanal from './components/PlanSemanal';
 import ListaCompra from './components/ListaCompra';
 import Catalogo from './components/Catalogo';
 import AnadirPlato from './components/AnadirPlato';
+import EditarReceta from './components/EditarReceta';
 import Ingredientes from './components/Ingredientes';
 import './App.css';
 
@@ -25,7 +26,8 @@ const emptyPlan = () => {
 
 export default function App() {
   const [tab, setTab] = useState('plan');
-  const [catalogoView, setCatalogoView] = useState('list'); // 'list' | 'add'
+  const [catalogoView, setCatalogoView] = useState('list'); // 'list' | 'add' | 'edit'
+  const [editingPlato, setEditingPlato] = useState(null);
   const [platos, setPlatos] = useState([]);
   const [ingredientes, setIngredientes] = useState([]);
   const [recetas, setRecetas] = useState([]);
@@ -84,6 +86,12 @@ export default function App() {
 
   const addIngrediente = async (data) => {
     await api.addIngrediente(data);
+    await loadData();
+  };
+
+  const updateReceta = async (id, platoData, ingRows) => {
+    await api.updatePlato(id, platoData);
+    await api.updateRecetaIngredientes(id, ingRows);
     await loadData();
   };
 
@@ -171,6 +179,7 @@ export default function App() {
                 recetas={recetas}
                 ingredientes={ingredientes}
                 onAnadir={() => setCatalogoView('add')}
+                onEditar={(plato) => { setEditingPlato(plato); setCatalogoView('edit'); }}
               />
             )}
             {tab === 'catalogo' && catalogoView === 'add' && (
@@ -178,6 +187,15 @@ export default function App() {
                 ingredientes={ingredientes}
                 onAdd={addPlato}
                 onDone={() => setCatalogoView('list')}
+              />
+            )}
+            {tab === 'catalogo' && catalogoView === 'edit' && editingPlato && (
+              <EditarReceta
+                plato={editingPlato}
+                recetasPlato={recetas.filter(r => String(r.idPlato) === String(editingPlato.id))}
+                ingredientes={ingredientes}
+                onUpdate={updateReceta}
+                onDone={() => { setEditingPlato(null); setCatalogoView('list'); }}
               />
             )}
             {tab === 'ingredientes' && (

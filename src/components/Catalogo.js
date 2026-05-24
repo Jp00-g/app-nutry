@@ -6,7 +6,7 @@ const CAT_CLASS = {
   WRAP: 'cat-wrap', PLATO: 'cat-otros',
 };
 
-export default function Catalogo({ platos, recetas, ingredientes, onAnadir }) {
+export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEditar }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
   const [open, setOpen] = useState(null);
@@ -65,6 +65,13 @@ export default function Catalogo({ platos, recetas, ingredientes, onAnadir }) {
               <div className="plato-card-header" onClick={() => setOpen(isOpen ? null : plato.id)}>
                 <span className={`chip ${CAT_CLASS[plato.categoria] || ''}`}>{plato.categoria}</span>
                 <span className="plato-card-name">{plato.nombre}</span>
+                <button
+                  className="btn-secondary"
+                  style={{ padding: '4px 10px', fontSize: 12 }}
+                  onClick={e => { e.stopPropagation(); onEditar(plato); }}
+                >
+                  Editar
+                </button>
                 <span className={`plato-card-arrow ${isOpen ? 'open' : ''}`}>▼</span>
               </div>
               {isOpen && (
