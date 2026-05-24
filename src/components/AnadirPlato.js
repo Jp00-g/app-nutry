@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const MOMENTOS_OPT = ['Comidas', 'Cenas'];
 const CATS_COMIDA = ['CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'OTROS'];
@@ -11,8 +11,32 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
   const [ingRows, setIngRows] = useState([]);
   const [selIng, setSelIng] = useState('');
   const [selCant, setSelCant] = useState('');
+  const [ingSearch, setIngSearch] = useState('');
+  const [ingOpen, setIngOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const ingRef = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ingRef.current && !ingRef.current.contains(e.target)) setIngOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const selectedIng = ingredientes.find(i => String(i.id) === selIng);
+
+  const filteredIngs = ingredientes.filter(i =>
+    i.nombre.toLowerCase().includes(ingSearch.toLowerCase())
+  );
+
+  const groupedIngs = filteredIngs.reduce((acc, ing) => {
+    const cat = ing.categoria || 'Otros';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(ing);
+    return acc;
+  }, {});
 
   const cats = momento === 'Comidas' ? CATS_COMIDA : CATS_CENA;
 
@@ -91,13 +115,35 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
         <div className="form-group">
           <label>Añadir ingrediente</label>
           <div className="ing-add-row">
-            <div className="form-group">
-              <select value={selIng} onChange={e => setSelIng(e.target.value)}>
-                <option value="">— Selecciona —</option>
-                {ingredientes.map(i => (
-                  <option key={i.id} value={i.id}>{i.nombre}</option>
-                ))}
-              </select>
+            <div className="form-group ing-combobox-wrap" ref={ingRef}>
+              <input
+                value={ingOpen ? ingSearch : (selectedIng ? selectedIng.nombre : '')}
+                onChange={e => { setIngSearch(e.target.value); setIngOpen(true); setSelIng(''); }}
+                onFocus={() => { setIngOpen(true); setIngSearch(''); }}
+                placeholder="Buscar ingrediente…"
+                autoComplete="off"
+              />
+              {ingOpen && (
+                <div className="ing-dropdown">
+                  {Object.keys(groupedIngs).length === 0
+                    ? <div className="ing-dropdown-empty">Sin resultados</div>
+                    : Object.entries(groupedIngs).map(([cat, ings]) => (
+                      <div key={cat}>
+                        <div className="ing-dropdown-cat">{cat}</div>
+                        {ings.map(ing => (
+                          <div
+                            key={ing.id}
+                            className="ing-dropdown-opt"
+                            onMouseDown={() => { setSelIng(String(ing.id)); setIngOpen(false); setIngSearch(''); }}
+                          >
+                            {ing.nombre}
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
             </div>
             <div className="form-group small">
               <input
