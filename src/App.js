@@ -140,10 +140,11 @@ export default function App() {
         if (!platoId) return;
         const recetasPlato = recetas.filter(r => String(r.idPlato) === String(platoId));
         recetasPlato.forEach(r => {
-          const key = r.idIngrediente;
+          const key = r.nombreIng;
           if (!totales[key]) {
-            const ing = ingredientes.find(i => String(i.id) === String(key));
-            totales[key] = { nombre: ing?.nombre || key, unidad: ing?.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
+            const ing = ingredientes.find(i => String(i.id) === String(r.idIngrediente))
+                     || ingredientes.find(i => i.nombre === r.nombreIng);
+            totales[key] = { nombre: r.nombreIng, unidad: ing?.unidad || r.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
           }
           const cant = parseFloat(r.cantidad);
           if (!isNaN(cant)) totales[key].cantidad += cant;
