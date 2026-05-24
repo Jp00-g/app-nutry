@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/diet-app/static/css/main.8af354ac.css",
-    "main.js": "/diet-app/static/js/main.9776551d.js",
-    "index.html": "/diet-app/index.html",
-    "main.8af354ac.css.map": "/diet-app/static/css/main.8af354ac.css.map",
-    "main.9776551d.js.map": "/diet-app/static/js/main.9776551d.js.map"
+    "main.css": "/app-nutry/static/css/main.75bcbf4e.css",
+    "main.js": "/app-nutry/static/js/main.9e30b12d.js",
+    "index.html": "/app-nutry/index.html",
+    "main.75bcbf4e.css.map": "/app-nutry/static/css/main.75bcbf4e.css.map",
+    "main.9e30b12d.js.map": "/app-nutry/static/js/main.9e30b12d.js.map"
   },
   "entrypoints": [
-    "static/css/main.8af354ac.css",
-    "static/js/main.9776551d.js"
+    "static/css/main.75bcbf4e.css",
+    "static/js/main.9e30b12d.js"
   ]
 }
