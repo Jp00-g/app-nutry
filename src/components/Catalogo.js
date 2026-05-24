@@ -8,7 +8,7 @@ const CAT_CLASS = {
 
 const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos'];
 
-export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEditar }) {
+export default function Catalogo({ platos, recetas, onAnadir, onEditar }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
   const [momentoFilter, setMomentoFilter] = useState('Todos');
@@ -23,12 +23,8 @@ export default function Catalogo({ platos, recetas, ingredientes, onAnadir, onEd
     return matchSearch && matchCat && matchMomento;
   });
 
-  const getRecetasPlato = (platoId) => {
-    return recetas.filter(r => String(r.idPlato) === String(platoId)).map(r => {
-      const ing = ingredientes.find(i => String(i.id) === String(r.idIngrediente));
-      return { ...r, nombreIng: ing?.nombre || r.idIngrediente, unidad: ing?.unidad || '' };
-    });
-  };
+  const getRecetasPlato = (platoId) =>
+    recetas.filter(r => String(r.idPlato) === String(platoId));
 
   return (
     <>

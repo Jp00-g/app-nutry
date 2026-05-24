@@ -182,7 +182,6 @@ export default function App() {
               <Catalogo
                 platos={platos}
                 recetas={recetas}
-                ingredientes={ingredientes}
                 onAnadir={() => setCatalogoView('add')}
                 onEditar={(plato) => { setEditingPlato(plato); setCatalogoView('edit'); }}
               />
