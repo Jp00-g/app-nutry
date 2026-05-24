@@ -66,10 +66,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
                     onClick={() => openModal(dia, momento)}
                   >
                     {plato ? (
-                      <>
-                        <span className={`chip ${CAT_CLASS[plato.categoria] || ''}`}>{plato.categoria}</span>
-                        <span className="plan-cell-name">{plato.nombre}</span>
-                      </>
+                      <span className="plan-cell-name">{plato.nombre}</span>
                     ) : (
                       <span className="plan-cell-empty">＋</span>
                     )}

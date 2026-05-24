@@ -4,6 +4,7 @@ import PlanSemanal from './components/PlanSemanal';
 import ListaCompra from './components/ListaCompra';
 import Catalogo from './components/Catalogo';
 import AnadirPlato from './components/AnadirPlato';
+import Ingredientes from './components/Ingredientes';
 import './App.css';
 
 const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -14,6 +15,7 @@ const NAV = [
   { id: 'compra', label: 'Compra', icon: '🛒' },
   { id: 'catalogo', label: 'Platos', icon: '🍽️' },
   { id: 'anadir', label: 'Añadir', icon: '➕' },
+  { id: 'ingredientes', label: 'Ingred.', icon: '🥕' },
 ];
 
 const emptyPlan = () => {
@@ -72,6 +74,16 @@ export default function App() {
 
   const addPlato = async (platoData, ingredientesData) => {
     await api.addPlato(platoData, ingredientesData);
+    await loadData();
+  };
+
+  const updateIngrediente = async (id, data) => {
+    await api.updateIngrediente(id, data);
+    await loadData();
+  };
+
+  const addIngrediente = async (data) => {
+    await api.addIngrediente(data);
     await loadData();
   };
 
@@ -165,6 +177,13 @@ export default function App() {
                 ingredientes={ingredientes}
                 onAdd={addPlato}
                 onDone={() => setTab('catalogo')}
+              />
+            )}
+            {tab === 'ingredientes' && (
+              <Ingredientes
+                ingredientes={ingredientes}
+                onUpdate={updateIngrediente}
+                onAdd={addIngrediente}
               />
             )}
           </>

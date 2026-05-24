@@ -42,8 +42,10 @@ function handleRequest(e) {
       case 'getRecetas':      return ok(getRecetas());
       case 'getPlanSemanal':  return ok(getPlanSemanal());
       case 'setPlanSemanal':  return ok(setPlanSemanal(body.plan));
-      case 'addPlato':        return ok(addPlato(body.plato, body.ingredientes));
-      default:                return err('Acción desconocida: ' + action);
+      case 'addPlato':          return ok(addPlato(body.plato, body.ingredientes));
+      case 'updateIngrediente': return ok(updateIngrediente(body.id, body.nombre, body.unidad, body.categoria));
+      case 'addIngrediente':    return ok(addIngrediente(body.nombre, body.unidad, body.categoria));
+      default:                  return err('Acción desconocida: ' + action);
     }
   } catch (ex) {
     return err(ex.message);
@@ -160,5 +162,29 @@ function addPlato(platoData, ingredientesData) {
     });
   }
 
+  return { id: newId };
+}
+
+// ── INGREDIENTES (CRUD) ─────────────────────────────────────────────
+function updateIngrediente(id, nombre, unidad, categoria) {
+  const sheet = getSheet('Ingredientes');
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][0]) === String(id)) {
+      sheet.getRange(i + 1, 2, 1, 3).setValues([[nombre, unidad, categoria]]);
+      return { id };
+    }
+  }
+  throw new Error('Ingrediente no encontrado: ' + id);
+}
+
+function addIngrediente(nombre, unidad, categoria) {
+  if (!nombre) throw new Error('Nombre requerido');
+  const sheet = getSheet('Ingredientes');
+  const lastRow = sheet.getLastRow();
+  const ids = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 1).getValues().flat().filter(Boolean) : [];
+  const maxId = ids.reduce((m, v) => Math.max(m, parseFloat(v) || 0), 0);
+  const newId = maxId + 1;
+  sheet.appendRow([newId, nombre, unidad || 'ud', categoria || '']);
   return { id: newId };
 }

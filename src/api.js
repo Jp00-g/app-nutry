@@ -22,4 +22,6 @@ export const api = {
   getPlanSemanal: () => call('getPlanSemanal'),
   setPlanSemanal: (plan) => call('setPlanSemanal', { plan }),
   addPlato: (plato, ingredientes) => call('addPlato', { plato, ingredientes }),
+  updateIngrediente: (id, data) => call('updateIngrediente', { id, ...data }),
+  addIngrediente: (data) => call('addIngrediente', data),
 };
