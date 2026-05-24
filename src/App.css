@@ -439,7 +439,7 @@ label {
 
 .plan-grid {
   display: grid;
-  grid-template-columns: 80px repeat(7, minmax(110px, 1fr));
+  grid-template-columns: 92px repeat(7, minmax(110px, 1fr));
   gap: 6px;
   min-width: 860px;
 }
@@ -462,7 +462,9 @@ label {
   letter-spacing: .5px;
   display: flex;
   align-items: center;
+  gap: 4px;
   padding-right: 8px;
+  white-space: nowrap;
 }
 
 .plan-cell {
