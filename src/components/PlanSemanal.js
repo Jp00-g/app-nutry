@@ -123,7 +123,9 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
   );
 }
 
-export default function PlanSemanal({ plans, platos, dias, momentos, categorias, onUpdate, getPlatoById }) {
+export default function PlanSemanal({ plans, platos, dias, momentos, categorias, onUpdate, onClear, getPlatoById }) {
+  const [confirmClear, setConfirmClear] = useState(null); // weekIdx
+
   return (
     <>
       <p className="section-title">Plan semanal</p>
@@ -133,6 +135,13 @@ export default function PlanSemanal({ plans, platos, dias, momentos, categorias,
         <div key={i} className="semana-seccion">
           <div className="semana-seccion-header">
             <span className="semana-seccion-num">Semana {i + 1}</span>
+            <button
+              className="btn-secondary"
+              style={{ padding: '4px 12px', fontSize: 12 }}
+              onClick={() => setConfirmClear(i)}
+            >
+              Limpiar
+            </button>
           </div>
           <SemanaGrid
             weekIdx={i}
@@ -146,6 +155,23 @@ export default function PlanSemanal({ plans, platos, dias, momentos, categorias,
           />
         </div>
       ))}
+
+      {confirmClear !== null && (
+        <div className="modal-overlay centered" onClick={() => setConfirmClear(null)}>
+          <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+            <div className="confirm-title">¿Limpiar semana {confirmClear + 1}?</div>
+            <div className="confirm-body">
+              Se eliminarán todos los platos de la semana. Esta acción no se puede deshacer.
+            </div>
+            <div className="confirm-btns">
+              <button className="btn-secondary" onClick={() => setConfirmClear(null)}>Cancelar</button>
+              <button className="btn-danger" onClick={() => { onClear(confirmClear); setConfirmClear(null); }}>
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

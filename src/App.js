@@ -78,6 +78,16 @@ export default function App() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  const clearPlan = async (weekIdx) => {
+    const empty = emptyPlan();
+    const newPlans = [...plans];
+    newPlans[weekIdx] = empty;
+    setPlans(newPlans);
+    setSaving(true);
+    try { await api.setPlanSemana(weekIdx + 1, empty); } catch (_) {}
+    setSaving(false);
+  };
+
   const updatePlan = async (weekIdx, dia, momento, platoId) => {
     const cur = plans[weekIdx];
     const next = { ...cur, [dia]: { ...cur[dia], [momento]: platoId } };
@@ -180,6 +190,7 @@ export default function App() {
                 momentos={MOMENTOS}
                 categorias={categorias}
                 onUpdate={updatePlan}
+                onClear={clearPlan}
                 getPlatoById={getPlatoById}
               />
             )}
