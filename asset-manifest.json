@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/app-nutry/static/css/main.16225061.css",
-    "main.js": "/app-nutry/static/js/main.f9e64d35.js",
+    "main.js": "/app-nutry/static/js/main.0f86360d.js",
     "index.html": "/app-nutry/index.html",
     "main.16225061.css.map": "/app-nutry/static/css/main.16225061.css.map",
-    "main.f9e64d35.js.map": "/app-nutry/static/js/main.f9e64d35.js.map"
+    "main.0f86360d.js.map": "/app-nutry/static/js/main.0f86360d.js.map"
   },
   "entrypoints": [
     "static/css/main.16225061.css",
-    "static/js/main.f9e64d35.js"
+    "static/js/main.0f86360d.js"
   ]
 }
