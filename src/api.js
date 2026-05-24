@@ -1,6 +1,7 @@
-// ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
-// Pega aquí la URL que obtienes al publicar el Apps Script
-const APPS_SCRIPT_URL = process.env.REACT_APP_SCRIPT_URL || '';
+const APPS_SCRIPT_URL =
+  process.env.NODE_ENV === 'development'
+    ? '/gas-proxy'
+    : process.env.REACT_APP_SCRIPT_URL || '';
 
 const call = async (action, payload = {}) => {
   const url = `${APPS_SCRIPT_URL}?action=${action}`;

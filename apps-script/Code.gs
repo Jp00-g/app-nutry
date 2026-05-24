@@ -13,24 +13,19 @@ function getSheet(name) {
   return SpreadsheetApp.openById(SS_ID).getSheetByName(name);
 }
 
-// ── CORS ────────────────────────────────────────────────────────────
 function doGet(e)  { return handleRequest(e); }
 function doPost(e) { return handleRequest(e); }
 
-function cors(output) {
-  return output
-    .setMimeType(ContentService.MimeType.JSON)
-    .addHeader('Access-Control-Allow-Origin', '*')
-    .addHeader('Access-Control-Allow-Methods', 'GET, POST')
-    .addHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
 function ok(data) {
-  return cors(ContentService.createTextOutput(JSON.stringify({ ok: true, data })));
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, data }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function err(msg) {
-  return cors(ContentService.createTextOutput(JSON.stringify({ ok: false, error: msg })));
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: false, error: msg }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function handleRequest(e) {
