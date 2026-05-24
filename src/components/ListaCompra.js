@@ -2,6 +2,12 @@ import React, { useState, useMemo } from 'react';
 
 const UBICACION_ORDER = ['Supermercado', 'Mercado', 'Casa'];
 
+const UBICACION_CONFIG = {
+  Supermercado: { emoji: '🛒', color: '#22D3EE' },
+  Mercado:      { emoji: '🏪', color: '#F59E0B' },
+  Casa:         { emoji: '🏠', color: '#4ADE80' },
+};
+
 function buildGrouped(lista) {
   const grouped = {};
   lista.forEach(item => {
@@ -18,7 +24,8 @@ function exportText(lista, weekNum) {
   const grouped = buildGrouped(lista);
   const lines = [`🛒 LISTA DE LA COMPRA — Semana ${weekNum}`, ''];
   grouped.forEach(({ ubicacion, cats }) => {
-    lines.push(`📍 ${ubicacion.toUpperCase()}`);
+    const cfg = UBICACION_CONFIG[ubicacion] || { emoji: '📍' };
+    lines.push(`${cfg.emoji} ${ubicacion.toUpperCase()}`);
     Object.entries(cats).forEach(([cat, items]) => {
       lines.push(`  ── ${cat} ──`);
       items.forEach(i => {
@@ -31,16 +38,26 @@ function exportText(lista, weekNum) {
   return lines.join('\n');
 }
 
-function SemanaCard({ weekNum, lista, dias, momentos }) {
+function SemanaCard({ weekNum, lista }) {
   const [open, setOpen] = useState(false);
-  const [checked, setChecked] = useState({});
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(`compra_checked_${weekNum}`) || '{}'); }
+    catch { return {}; }
+  });
   const [exportOpen, setExportOpen] = useState(false);
 
   const grouped = useMemo(() => buildGrouped(lista), [lista]);
-  const toggle = (nombre) => setChecked(c => ({ ...c, [nombre]: !c[nombre] }));
+
+  const toggle = (nombre) => setChecked(c => {
+    const next = { ...c, [nombre]: !c[nombre] };
+    localStorage.setItem(`compra_checked_${weekNum}`, JSON.stringify(next));
+    return next;
+  });
+
+  const uncheckedLista = lista.filter(item => !checked[item.nombre]);
 
   const share = async () => {
-    const text = exportText(lista, weekNum);
+    const text = exportText(uncheckedLista, weekNum);
     if (navigator.share) {
       await navigator.share({ title: `Lista semana ${weekNum}`, text });
     } else {
@@ -51,7 +68,7 @@ function SemanaCard({ weekNum, lista, dias, momentos }) {
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(exportText(lista, weekNum));
+    await navigator.clipboard.writeText(exportText(uncheckedLista, weekNum));
     alert('¡Copiado!');
     setExportOpen(false);
   };
@@ -81,36 +98,41 @@ function SemanaCard({ weekNum, lista, dias, momentos }) {
 
       {open && lista.length > 0 && (
         <div className="semana-card-body">
-          {grouped.map(({ ubicacion, cats }) => (
-            <div key={ubicacion}>
-              <div className="compra-ubicacion-title">{ubicacion}</div>
-              {Object.entries(cats).map(([cat, items]) => (
-                <div key={cat}>
-                  <div className="compra-cat-title" style={{ position: 'static' }}>{cat}</div>
-                  <div className="card" style={{ padding: '0 14px' }}>
-                    {items.map(item => (
-                      <div key={item.nombre} className="compra-item">
-                        <div
-                          className={`compra-check ${checked[item.nombre] ? 'done' : ''}`}
-                          onClick={() => toggle(item.nombre)}
-                        >
-                          {checked[item.nombre] ? '✓' : ''}
-                        </div>
-                        <span className={`compra-item-name ${checked[item.nombre] ? 'done' : ''}`}>
-                          {item.nombre}
-                        </span>
-                        {item.cantidad > 0 && (
-                          <span className="compra-item-cant">
-                            {Math.round(item.cantidad)} {item.unidad}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+          {grouped.map(({ ubicacion, cats }) => {
+            const cfg = UBICACION_CONFIG[ubicacion] || { emoji: '📍', color: 'var(--accent2)' };
+            return (
+              <div key={ubicacion}>
+                <div className="compra-ubicacion-title" style={{ color: cfg.color }}>
+                  {cfg.emoji} {ubicacion}
                 </div>
-              ))}
-            </div>
-          ))}
+                {Object.entries(cats).map(([cat, items]) => (
+                  <div key={cat}>
+                    <div className="compra-cat-title" style={{ position: 'static' }}>{cat}</div>
+                    <div className="card" style={{ padding: '0 14px' }}>
+                      {items.map(item => (
+                        <div key={item.nombre} className="compra-item">
+                          <div
+                            className={`compra-check ${checked[item.nombre] ? 'done' : ''}`}
+                            onClick={() => toggle(item.nombre)}
+                          >
+                            {checked[item.nombre] ? '✓' : ''}
+                          </div>
+                          <span className={`compra-item-name ${checked[item.nombre] ? 'done' : ''}`}>
+                            {item.nombre}
+                          </span>
+                          {item.cantidad > 0 && (
+                            <span className="compra-item-cant">
+                              {Math.round(item.cantidad)} {item.unidad}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -124,7 +146,12 @@ function SemanaCard({ weekNum, lista, dias, momentos }) {
         <div className="export-modal" onClick={() => setExportOpen(false)}>
           <div className="export-sheet" onClick={e => e.stopPropagation()}>
             <h3>Exportar Semana {weekNum}</h3>
-            <pre className="export-text">{exportText(lista, weekNum)}</pre>
+            {uncheckedLista.length < lista.length && (
+              <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 8 }}>
+                {lista.length - uncheckedLista.length} ingrediente(s) marcado(s) excluido(s)
+              </p>
+            )}
+            <pre className="export-text">{exportText(uncheckedLista, weekNum)}</pre>
             <div className="export-btns">
               <button className="btn-primary" style={{ flex: 1 }} onClick={share}>📱 Compartir</button>
               <button className="btn-secondary" style={{ flex: 1 }} onClick={copy}>📋 Copiar</button>
@@ -137,7 +164,7 @@ function SemanaCard({ weekNum, lista, dias, momentos }) {
   );
 }
 
-export default function ListaCompra({ plans, generarLista, dias, momentos }) {
+export default function ListaCompra({ plans, generarLista }) {
   const listas = useMemo(
     () => plans.map(p => generarLista(p)),
     [plans, generarLista]
@@ -149,7 +176,7 @@ export default function ListaCompra({ plans, generarLista, dias, momentos }) {
       <p className="section-sub">Selecciona una semana para ver los ingredientes</p>
       <div className="compra-wrap">
         {listas.map((lista, i) => (
-          <SemanaCard key={i} weekNum={i + 1} lista={lista} dias={dias} momentos={momentos} />
+          <SemanaCard key={i} weekNum={i + 1} lista={lista} />
         ))}
       </div>
     </>

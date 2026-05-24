@@ -24,14 +24,20 @@ export default function Catalogo({ platos, recetas, categorias, onAnadir, onEdit
   };
 
   const catColorMap = Object.fromEntries(categorias.map(c => [c.nombre, c.colorClass]));
+  const catOrderMap = Object.fromEntries(categorias.map(c => [c.nombre, c.orden]));
   const cats = ['Todas', ...new Set(platos.map(p => p.categoria))];
 
-  const filtered = platos.filter(p => {
-    const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
-    const matchCat = catFilter === 'Todas' || p.categoria === catFilter;
-    const matchMomento = momentoFilter === 'Todos' || p.momento === momentoFilter;
-    return matchSearch && matchCat && matchMomento;
-  });
+  const filtered = platos
+    .filter(p => {
+      const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
+      const matchCat = catFilter === 'Todas' || p.categoria === catFilter;
+      const matchMomento = momentoFilter === 'Todos' || p.momento === momentoFilter;
+      return matchSearch && matchCat && matchMomento;
+    })
+    .sort((a, b) => {
+      const orderDiff = (catOrderMap[a.categoria] ?? 999) - (catOrderMap[b.categoria] ?? 999);
+      return orderDiff !== 0 ? orderDiff : a.nombre.localeCompare(b.nombre);
+    });
 
   const getRecetasPlato = (platoId) =>
     recetas.filter(r => String(r.idPlato) === String(platoId));

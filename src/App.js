@@ -12,10 +12,10 @@ const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', '
 const MOMENTOS = ['Desayuno', 'Comida', 'Cena'];
 
 const NAV = [
-  { id: 'plan', label: 'Plan', icon: '🗓️' },
+  { id: 'plan', label: 'Plan', icon: '📅' },
   { id: 'compra', label: 'Compra', icon: '🛒' },
   { id: 'catalogo', label: 'Recetas', icon: '🍽️' },
-  { id: 'ingredientes', label: 'Ingred.', icon: '🥕' },
+  { id: 'ingredientes', label: 'Ingred.', icon: '🥑' },
 ];
 
 const emptyPlan = () => {
