@@ -1,29 +1,73 @@
-const APPS_SCRIPT_URL =
-  process.env.NODE_ENV === 'development'
-    ? '/gas-proxy'
-    : process.env.REACT_APP_SCRIPT_URL || '';
+import {
+  collection, doc, getDocs, getDoc,
+  setDoc, addDoc, updateDoc,
+  writeBatch, query, where,
+} from 'firebase/firestore';
+import { db } from './firebase';
 
-const call = async (action, payload = {}) => {
-  const url = `${APPS_SCRIPT_URL}?action=${action}`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
-};
+const toArr = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
 export const api = {
-  getPlatos: () => call('getPlatos'),
-  getIngredientes: () => call('getIngredientes'),
-  getRecetas: () => call('getRecetas'),
-  getPlanSemanal: () => call('getPlanSemanal'),
-  setPlanSemanal: (plan) => call('setPlanSemanal', { plan }),
-  addPlato: (plato, ingredientes) => call('addPlato', { plato, ingredientes }),
-  updateIngrediente: (id, data) => call('updateIngrediente', { id, ...data }),
-  addIngrediente: (data) => call('addIngrediente', data),
-  updatePlato: (id, data) => call('updatePlato', { id, ...data }),
-  updateRecetaIngredientes: (platoId, ingredientes) => call('updateRecetaIngredientes', { platoId, ingredientes }),
+  getPlatos: () => getDocs(collection(db, 'platos')).then(toArr),
+
+  getIngredientes: () => getDocs(collection(db, 'ingredientes')).then(toArr),
+
+  getRecetas: () => getDocs(collection(db, 'recetas')).then(toArr),
+
+  getPlanSemanal: async () => {
+    const snap = await getDoc(doc(db, 'config', 'planSemanal'));
+    return snap.exists() ? snap.data() : {};
+  },
+
+  setPlanSemanal: (plan) => setDoc(doc(db, 'config', 'planSemanal'), plan),
+
+  addPlato: async (plato, ingredientes) => {
+    const platoRef = await addDoc(collection(db, 'platos'), plato);
+    const batch = writeBatch(db);
+    (ingredientes || []).forEach(ing => {
+      batch.set(doc(collection(db, 'recetas')), {
+        idPlato:       platoRef.id,
+        nombrePlato:   plato.nombre,
+        idIngrediente: ing.id,
+        nombreIng:     ing.nombre,
+        cantidad:      ing.cantidad,
+        unidad:        ing.unidad,
+        notas:         ing.notas || '',
+      });
+    });
+    await batch.commit();
+    return { id: platoRef.id };
+  },
+
+  updateIngrediente: (id, data) => updateDoc(doc(db, 'ingredientes', id), data),
+
+  addIngrediente: async (data) => {
+    const ref = await addDoc(collection(db, 'ingredientes'), data);
+    return { id: ref.id };
+  },
+
+  updatePlato: (id, data) => updateDoc(doc(db, 'platos', id), data),
+
+  updateRecetaIngredientes: async (platoId, ingredientes) => {
+    const q = query(collection(db, 'recetas'), where('idPlato', '==', platoId));
+    const snap = await getDocs(q);
+    const batch = writeBatch(db);
+    snap.docs.forEach(d => batch.delete(d.ref));
+
+    const platoSnap = await getDoc(doc(db, 'platos', platoId));
+    const nombrePlato = platoSnap.exists() ? platoSnap.data().nombre : '';
+
+    (ingredientes || []).forEach(ing => {
+      batch.set(doc(collection(db, 'recetas')), {
+        idPlato:       platoId,
+        nombrePlato,
+        idIngrediente: ing.id,
+        nombreIng:     ing.nombre,
+        cantidad:      ing.cantidad,
+        unidad:        ing.unidad,
+        notas:         ing.notas || '',
+      });
+    });
+    await batch.commit();
+  },
 };

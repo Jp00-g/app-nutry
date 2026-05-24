@@ -46,14 +46,13 @@ export default function App() {
         api.getRecetas(),
         api.getPlanSemanal(),
       ]);
-      setPlatos(p.data || []);
-      setIngredientes(i.data || []);
-      setRecetas(r.data || []);
-      // Merge plan from server with empty structure
+      setPlatos(p || []);
+      setIngredientes(i || []);
+      setRecetas(r || []);
       const base = emptyPlan();
-      if (pl.data) {
-        Object.keys(pl.data).forEach(d => {
-          if (base[d]) Object.assign(base[d], pl.data[d]);
+      if (pl) {
+        Object.keys(pl).forEach(d => {
+          if (base[d]) Object.assign(base[d], pl[d]);
         });
       }
       setPlan(base);
@@ -119,8 +118,6 @@ export default function App() {
     return Object.values(totales).sort((a, b) => a.categoria.localeCompare(b.categoria));
   };
 
-  const configured = !!process.env.REACT_APP_SCRIPT_URL;
-
   return (
     <div className="app">
       {/* Header */}
@@ -134,12 +131,6 @@ export default function App() {
 
       {/* Content */}
       <main className="app-main">
-        {!configured && (
-          <div className="config-banner">
-            <span>⚙️</span>
-            <p>Configura la URL del Apps Script en <code>.env</code> para conectar con Google Sheets</p>
-          </div>
-        )}
 
         {loading ? (
           <div className="loading-screen">
