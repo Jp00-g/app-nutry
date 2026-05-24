@@ -75,6 +75,7 @@ function getIngredientes() {
     nombre:    r[1],
     unidad:    r[2],
     categoria: r[3],
+    ubicacion: r[4] || 'Supermercado',
   }));
 }
 

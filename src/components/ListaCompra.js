@@ -11,21 +11,28 @@ export default function ListaCompra({ lista, plan, platos, dias, momentos }) {
   dias.forEach(d => momentos.forEach(m => { if (plan[d]?.[m]) platosEnPlan.add(plan[d][m]); }));
   const numPlatos = platosEnPlan.size;
 
-  // Group by categoria
+  const UBICACION_ORDER = ['Supermercado', 'Mercado', 'Casa'];
   const grouped = {};
   lista.forEach(item => {
+    const ub = item.ubicacion || 'Supermercado';
+    if (!grouped[ub]) grouped[ub] = {};
     const cat = item.categoria || 'Otros';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(item);
+    if (!grouped[ub][cat]) grouped[ub][cat] = [];
+    grouped[ub][cat].push(item);
   });
+  const groupedSorted = UBICACION_ORDER.filter(u => grouped[u])
+    .map(u => ({ ubicacion: u, cats: grouped[u] }));
 
   const exportText = () => {
     const lines = ['🛒 LISTA DE LA COMPRA', ''];
-    Object.entries(grouped).forEach(([cat, items]) => {
-      lines.push(`── ${cat.toUpperCase()} ──`);
-      items.forEach(i => {
-        const cant = i.cantidad > 0 ? `${Math.round(i.cantidad)} ${i.unidad}` : '';
-        lines.push(`  • ${i.nombre}${cant ? ` (${cant})` : ''}`);
+    groupedSorted.forEach(({ ubicacion, cats }) => {
+      lines.push(`📍 ${ubicacion.toUpperCase()}`);
+      Object.entries(cats).forEach(([cat, items]) => {
+        lines.push(`  ── ${cat} ──`);
+        items.forEach(i => {
+          const cant = i.cantidad > 0 ? `${Math.round(i.cantidad)} ${i.unidad}` : '';
+          lines.push(`    • ${i.nombre}${cant ? ` (${cant})` : ''}`);
+        });
       });
       lines.push('');
     });
@@ -76,29 +83,34 @@ export default function ListaCompra({ lista, plan, platos, dias, momentos }) {
           </button>
         </div>
 
-        {Object.entries(grouped).map(([cat, items]) => (
-          <div key={cat}>
-            <div className="compra-cat-title">{cat}</div>
-            <div className="card" style={{ padding: '0 14px' }}>
-              {items.map(item => (
-                <div key={item.nombre} className="compra-item">
-                  <div
-                    className={`compra-check ${checked[item.nombre] ? 'done' : ''}`}
-                    onClick={() => toggle(item.nombre)}
-                  >
-                    {checked[item.nombre] ? '✓' : ''}
-                  </div>
-                  <span className={`compra-item-name ${checked[item.nombre] ? 'done' : ''}`}>
-                    {item.nombre}
-                  </span>
-                  {item.cantidad > 0 && (
-                    <span className="compra-item-cant">
-                      {Math.round(item.cantidad)} {item.unidad}
-                    </span>
-                  )}
+        {groupedSorted.map(({ ubicacion, cats }) => (
+          <div key={ubicacion}>
+            <div className="compra-ubicacion-title">{ubicacion}</div>
+            {Object.entries(cats).map(([cat, items]) => (
+              <div key={cat}>
+                <div className="compra-cat-title">{cat}</div>
+                <div className="card" style={{ padding: '0 14px' }}>
+                  {items.map(item => (
+                    <div key={item.nombre} className="compra-item">
+                      <div
+                        className={`compra-check ${checked[item.nombre] ? 'done' : ''}`}
+                        onClick={() => toggle(item.nombre)}
+                      >
+                        {checked[item.nombre] ? '✓' : ''}
+                      </div>
+                      <span className={`compra-item-name ${checked[item.nombre] ? 'done' : ''}`}>
+                        {item.nombre}
+                      </span>
+                      {item.cantidad > 0 && (
+                        <span className="compra-item-cant">
+                          {Math.round(item.cantidad)} {item.unidad}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

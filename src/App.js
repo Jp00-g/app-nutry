@@ -109,7 +109,7 @@ export default function App() {
           const key = r.idIngrediente;
           if (!totales[key]) {
             const ing = ingredientes.find(i => String(i.id) === String(key));
-            totales[key] = { nombre: ing?.nombre || key, unidad: ing?.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros' };
+            totales[key] = { nombre: ing?.nombre || key, unidad: ing?.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
           }
           const cant = parseFloat(r.cantidad);
           if (!isNaN(cant)) totales[key].cantidad += cant;
