@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const CATS = ['Todas', 'CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'WRAP', 'PLATO'];
+const CATS = ['Todo', 'CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'WRAP', 'PLATO'];
 const CAT_CLASS = {
   CARNES: 'cat-carnes', ENSALADAS: 'cat-ensaladas', CUCHARA: 'cat-cuchara',
   PASTA: 'cat-pasta', ARROZ: 'cat-arroz', PESCADO: 'cat-pescado',
@@ -14,7 +14,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
 
   const openModal = (dia, momento) => {
     setSearch('');
-    setCatFilter('Todas');
+    setCatFilter('Todo');
     setModal({ dia, momento });
   };
 
@@ -31,7 +31,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
       modal.momento === 'Comida' ? p.momento === 'Comidas' : p.momento === 'Cenas'
     ) : true;
     const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
-    const matchCat = catFilter === 'Todas' || p.categoria === catFilter;
+    const matchCat = catFilter === 'Todo' || p.categoria === catFilter;
     return matchMomento && matchSearch && matchCat;
   });
 
@@ -103,7 +103,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
             </div>
 
             <div className="modal-cats">
-              {CATS.filter(c => c === 'Todas' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
+              {CATS.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
                 <button
                   key={c}
                   className={`cat-filter ${catFilter === c ? 'active' : ''}`}
