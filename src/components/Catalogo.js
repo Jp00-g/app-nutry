@@ -24,7 +24,6 @@ export default function Catalogo({ platos, recetas, categorias, onAnadir, onEdit
   };
 
   const catColorMap = Object.fromEntries(categorias.map(c => [c.nombre, c.colorClass]));
-  const catOrderMap = Object.fromEntries(categorias.map(c => [c.nombre, c.orden]));
   const cats = ['Todas', ...new Set(platos.map(p => p.categoria))];
 
   const filtered = platos
@@ -35,8 +34,8 @@ export default function Catalogo({ platos, recetas, categorias, onAnadir, onEdit
       return matchSearch && matchCat && matchMomento;
     })
     .sort((a, b) => {
-      const orderDiff = (catOrderMap[a.categoria] ?? 999) - (catOrderMap[b.categoria] ?? 999);
-      return orderDiff !== 0 ? orderDiff : a.nombre.localeCompare(b.nombre);
+      const catDiff = (a.categoria || '').localeCompare(b.categoria || '');
+      return catDiff !== 0 ? catDiff : a.nombre.localeCompare(b.nombre);
     });
 
   const getRecetasPlato = (platoId) =>

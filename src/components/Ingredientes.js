@@ -37,12 +37,15 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   }, [ingredientes, search, catFilter]);
 
   const grouped = useMemo(() => {
-    return filtered.reduce((acc, ing) => {
+    const map = filtered.reduce((acc, ing) => {
       const cat = ing.categoria || 'Sin categoría';
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(ing);
       return acc;
     }, {});
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([cat, ings]) => [cat, ings.sort((a, b) => a.nombre.localeCompare(b.nombre))]);
   }, [filtered]);
 
   const openEdit = (ing) => {
@@ -201,7 +204,7 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
           ))}
         </div>
 
-        {Object.entries(grouped).map(([cat, ings]) => (
+        {grouped.map(([cat, ings]) => (
           <div key={cat}>
             <div className="compra-cat-title">{cat}</div>
             {ings.map(ing => (
