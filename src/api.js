@@ -14,12 +14,18 @@ export const api = {
 
   getRecetas: () => getDocs(collection(db, 'recetas')).then(toArr),
 
-  getPlanSemanal: async () => {
-    const snap = await getDoc(doc(db, 'config', 'planSemanal'));
-    return snap.exists() ? snap.data() : {};
+  getPlanSemana: async (n) => {
+    const snap = await getDoc(doc(db, 'config', `semana${n}`));
+    if (snap.exists()) return snap.data();
+    // Fallback: semana 1 puede estar en el doc antiguo
+    if (n === 1) {
+      const old = await getDoc(doc(db, 'config', 'planSemanal'));
+      return old.exists() ? old.data() : {};
+    }
+    return {};
   },
 
-  setPlanSemanal: (plan) => setDoc(doc(db, 'config', 'planSemanal'), plan),
+  setPlanSemana: (n, plan) => setDoc(doc(db, 'config', `semana${n}`), plan),
 
   addPlato: async (plato, ingredientes) => {
     const platoRef = await addDoc(collection(db, 'platos'), plato);

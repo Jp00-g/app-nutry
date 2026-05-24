@@ -7,21 +7,19 @@ const CAT_CLASS = {
   WRAP: 'cat-wrap', PLATO: 'cat-otros',
 };
 
-export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, getPlatoById }) {
-  const [modal, setModal] = useState(null); // { dia, momento }
+function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoById }) {
+  const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
-  const [catFilter, setCatFilter] = useState('Todas');
+  const [catFilter, setCatFilter] = useState('Todo');
 
   const openModal = (dia, momento) => {
     setSearch('');
     setCatFilter('Todo');
     setModal({ dia, momento });
   };
-
   const closeModal = () => setModal(null);
-
   const selectPlato = (id) => {
-    onUpdate(modal.dia, modal.momento, id);
+    onUpdate(weekIdx, modal.dia, modal.momento, id);
     closeModal();
   };
 
@@ -39,18 +37,12 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
 
   return (
     <>
-      <p className="section-title">Plan semanal</p>
-      <p className="section-sub">Toca cualquier celda para elegir el plato</p>
-
       <div className="plan-scroll">
         <div className="plan-grid">
-          {/* Header */}
           <div />
           {dias.map(d => (
             <div key={d} className="plan-header-cell">{d.slice(0, 3)}</div>
           ))}
-
-          {/* Rows */}
           {momentos.map(momento => (
             <React.Fragment key={momento}>
               <div className="plan-moment-label">
@@ -65,11 +57,10 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
                     className={`plan-cell ${plato ? 'filled' : ''}`}
                     onClick={() => openModal(dia, momento)}
                   >
-                    {plato ? (
-                      <span className="plan-cell-name">{plato.nombre}</span>
-                    ) : (
-                      <span className="plan-cell-empty">＋</span>
-                    )}
+                    {plato
+                      ? <span className="plan-cell-name">{plato.nombre}</span>
+                      : <span className="plan-cell-empty">＋</span>
+                    }
                   </div>
                 );
               })}
@@ -78,18 +69,14 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
         </div>
       </div>
 
-      {/* Modal */}
       {modal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />
             <div className="modal-header">
-              <span className="modal-title">
-                {modal.momento} · {modal.dia}
-              </span>
+              <span className="modal-title">{modal.momento} · {modal.dia}</span>
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
-
             <div className="modal-search">
               <input
                 value={search}
@@ -98,7 +85,6 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
                 autoComplete="off"
               />
             </div>
-
             <div className="modal-cats">
               {CATS.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
                 <button
@@ -110,7 +96,6 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
                 </button>
               ))}
             </div>
-
             <div className="modal-list">
               {currentSelection && (
                 <div className="clear-option" onClick={() => selectPlato(null)}>
@@ -125,9 +110,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
                 >
                   <span className={`chip ${CAT_CLASS[p.categoria] || ''}`}>{p.categoria}</span>
                   <span className="plato-option-name">{p.nombre}</span>
-                  <div className="plato-option-check">
-                    {currentSelection === p.id ? '✓' : ''}
-                  </div>
+                  <div className="plato-option-check">{currentSelection === p.id ? '✓' : ''}</div>
                 </div>
               ))}
               {filteredPlatos.length === 0 && (
@@ -139,6 +122,32 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export default function PlanSemanal({ plans, platos, dias, momentos, onUpdate, getPlatoById }) {
+  return (
+    <>
+      <p className="section-title">Plan semanal</p>
+      <p className="section-sub">Edita cualquier semana tocando una celda</p>
+
+      {plans.map((plan, i) => (
+        <div key={i} className="semana-seccion">
+          <div className="semana-seccion-header">
+            <span className="semana-seccion-num">Semana {i + 1}</span>
+          </div>
+          <SemanaGrid
+            weekIdx={i}
+            plan={plan}
+            platos={platos}
+            dias={dias}
+            momentos={momentos}
+            onUpdate={onUpdate}
+            getPlatoById={getPlatoById}
+          />
+        </div>
+      ))}
     </>
   );
 }

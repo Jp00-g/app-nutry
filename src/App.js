@@ -31,7 +31,8 @@ export default function App() {
   const [platos, setPlatos] = useState([]);
   const [ingredientes, setIngredientes] = useState([]);
   const [recetas, setRecetas] = useState([]);
-  const [plan, setPlan] = useState(emptyPlan());
+  const [plans, setPlans] = useState([emptyPlan(), emptyPlan(), emptyPlan(), emptyPlan()]);
+  const [selectedWeek, setSelectedWeek] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -48,22 +49,23 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const [p, i, r, pl] = await Promise.all([
+      const [p, i, r, pl1, pl2, pl3, pl4] = await Promise.all([
         api.getPlatos(),
         api.getIngredientes(),
         api.getRecetas(),
-        api.getPlanSemanal(),
+        api.getPlanSemana(1),
+        api.getPlanSemana(2),
+        api.getPlanSemana(3),
+        api.getPlanSemana(4),
       ]);
       setPlatos(p || []);
       setIngredientes(i || []);
       setRecetas(r || []);
-      const base = emptyPlan();
-      if (pl) {
-        Object.keys(pl).forEach(d => {
-          if (base[d]) Object.assign(base[d], pl[d]);
-        });
-      }
-      setPlan(base);
+      setPlans([pl1, pl2, pl3, pl4].map(pl => {
+        const base = emptyPlan();
+        if (pl) Object.keys(pl).forEach(d => { if (base[d]) Object.assign(base[d], pl[d]); });
+        return base;
+      }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -73,11 +75,14 @@ export default function App() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const updatePlan = async (dia, momento, platoId) => {
-    const next = { ...plan, [dia]: { ...plan[dia], [momento]: platoId } };
-    setPlan(next);
+  const updatePlan = async (weekIdx, dia, momento, platoId) => {
+    const cur = plans[weekIdx];
+    const next = { ...cur, [dia]: { ...cur[dia], [momento]: platoId } };
+    const newPlans = [...plans];
+    newPlans[weekIdx] = next;
+    setPlans(newPlans);
     setSaving(true);
-    try { await api.setPlanSemanal(next); } catch (_) {}
+    try { await api.setPlanSemana(weekIdx + 1, next); } catch (_) {}
     setSaving(false);
   };
 
@@ -104,12 +109,11 @@ export default function App() {
 
   const getPlatoById = (id) => platos.find(p => p.id === id);
 
-  // Build lista de la compra
-  const generarLista = () => {
+  const generarLista = useCallback((plan) => {
     const totales = {};
     DIAS.forEach(dia => {
       MOMENTOS.forEach(momento => {
-        const platoId = plan[dia][momento];
+        const platoId = plan[dia]?.[momento];
         if (!platoId) return;
         const recetasPlato = recetas.filter(r => String(r.idPlato) === String(platoId));
         recetasPlato.forEach(r => {
@@ -124,7 +128,7 @@ export default function App() {
       });
     });
     return Object.values(totales).sort((a, b) => a.categoria.localeCompare(b.categoria));
-  };
+  }, [recetas, ingredientes]);
 
   return (
     <div className="app">
@@ -157,7 +161,7 @@ export default function App() {
           <>
             {tab === 'plan' && (
               <PlanSemanal
-                plan={plan}
+                plans={plans}
                 platos={platos}
                 dias={DIAS}
                 momentos={MOMENTOS}
@@ -167,8 +171,8 @@ export default function App() {
             )}
             {tab === 'compra' && (
               <ListaCompra
-                lista={generarLista()}
-                plan={plan}
+                plans={plans}
+                generarLista={generarLista}
                 platos={platos}
                 dias={DIAS}
                 momentos={MOMENTOS}
