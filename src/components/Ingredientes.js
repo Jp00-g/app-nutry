@@ -5,7 +5,7 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   const [catFilter, setCatFilter] = useState('Todo');
   const [view, setView] = useState('list'); // 'list' | 'add' | 'edit'
   const [editingIng, setEditingIng] = useState(null);
-  const [form, setForm] = useState({ nombre: '', unidad: 'ud', categoria: '' });
+  const [form, setForm] = useState({ nombre: '', unidad: 'ud', categoria: '', ubicacion: 'Supermercado' });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -46,13 +46,13 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   }, [filtered]);
 
   const openEdit = (ing) => {
-    setForm({ nombre: ing.nombre, unidad: ing.unidad || 'ud', categoria: ing.categoria || '' });
+    setForm({ nombre: ing.nombre, unidad: ing.unidad || 'ud', categoria: ing.categoria || '', ubicacion: ing.ubicacion || 'Supermercado' });
     setEditingIng(ing);
     setView('edit');
   };
 
   const openAdd = () => {
-    setForm({ nombre: '', unidad: 'ud', categoria: catFilter === 'Todo' ? '' : catFilter });
+    setForm({ nombre: '', unidad: 'ud', categoria: catFilter === 'Todo' ? '' : catFilter, ubicacion: 'Supermercado' });
     setEditingIng(null);
     setView('add');
   };
@@ -124,6 +124,18 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
               {cats.filter(c => c !== 'Todo').map(c => (
                 <option key={c} value={c}>{c}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Ubicación</label>
+            <select
+              value={form.ubicacion}
+              onChange={e => setForm(f => ({ ...f, ubicacion: e.target.value }))}
+            >
+              <option value="Supermercado">🛒 Supermercado</option>
+              <option value="Mercado">🏪 Mercado</option>
+              <option value="Casa">🏠 Casa</option>
             </select>
           </div>
 
