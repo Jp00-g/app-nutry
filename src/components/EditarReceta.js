@@ -158,7 +158,14 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, catego
             {ingRows.map((r, i) => (
               <div key={i} className="ing-added-item">
                 <span>{r.nombre}</span>
-                <strong>{r.cantidad} {r.unidad}</strong>
+                <input
+                  className="ing-cant-input"
+                  type="number"
+                  min="0"
+                  value={r.cantidad}
+                  onChange={e => setIngRows(rows => rows.map((row, idx) => idx === i ? { ...row, cantidad: e.target.value } : row))}
+                />
+                <span className="ing-added-unidad">{r.unidad}</span>
                 <button className="remove-btn" onClick={() => removeRow(i)}>✕</button>
               </div>
             ))}

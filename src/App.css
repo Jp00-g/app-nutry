@@ -940,6 +940,18 @@ label {
 
 .ing-added-item span { flex: 1; color: var(--text2); }
 .ing-added-item strong { color: var(--accent2); }
+.ing-cant-input {
+  width: 60px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--accent2);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  text-align: center;
+}
+.ing-added-unidad { flex: 0 !important; color: var(--text3) !important; font-size: 12px; }
 
 .remove-btn {
   background: none;
