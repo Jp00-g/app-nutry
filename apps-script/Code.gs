@@ -1,0 +1,169 @@
+// ═══════════════════════════════════════════════════════════════════
+//  MI APP DE DIETA — Google Apps Script Backend
+//  Pega este código en: script.google.com → Nuevo proyecto
+//  Luego: Implementar → Nueva implementación → Aplicación web
+//         Ejecutar como: Yo | Quién tiene acceso: Cualquiera
+// ═══════════════════════════════════════════════════════════════════
+
+const SS_ID = 'PEGA_AQUI_EL_ID_DE_TU_GOOGLE_SHEET';
+// El ID está en la URL de tu Sheet:
+// https://docs.google.com/spreadsheets/d/[ESTE_ES_EL_ID]/edit
+
+function getSheet(name) {
+  return SpreadsheetApp.openById(SS_ID).getSheetByName(name);
+}
+
+// ── CORS ────────────────────────────────────────────────────────────
+function doGet(e)  { return handleRequest(e); }
+function doPost(e) { return handleRequest(e); }
+
+function cors(output) {
+  return output
+    .setMimeType(ContentService.MimeType.JSON)
+    .addHeader('Access-Control-Allow-Origin', '*')
+    .addHeader('Access-Control-Allow-Methods', 'GET, POST')
+    .addHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+function ok(data) {
+  return cors(ContentService.createTextOutput(JSON.stringify({ ok: true, data })));
+}
+
+function err(msg) {
+  return cors(ContentService.createTextOutput(JSON.stringify({ ok: false, error: msg })));
+}
+
+function handleRequest(e) {
+  try {
+    const action = (e.parameter && e.parameter.action) || '';
+    let body = {};
+    if (e.postData && e.postData.contents) {
+      try { body = JSON.parse(e.postData.contents); } catch (_) {}
+    }
+
+    switch (action) {
+      case 'getPlatos':       return ok(getPlatos());
+      case 'getIngredientes': return ok(getIngredientes());
+      case 'getRecetas':      return ok(getRecetas());
+      case 'getPlanSemanal':  return ok(getPlanSemanal());
+      case 'setPlanSemanal':  return ok(setPlanSemanal(body.plan));
+      case 'addPlato':        return ok(addPlato(body.plato, body.ingredientes));
+      default:                return err('Acción desconocida: ' + action);
+    }
+  } catch (ex) {
+    return err(ex.message);
+  }
+}
+
+// ── PLATOS ──────────────────────────────────────────────────────────
+function getPlatos() {
+  const sheet = getSheet('Platos');
+  const rows = sheet.getDataRange().getValues();
+  return rows.slice(1).filter(r => r[0]).map(r => ({
+    id:        String(r[0]),
+    nombre:    r[1],
+    momento:   r[2],
+    categoria: r[3],
+  }));
+}
+
+// ── INGREDIENTES ────────────────────────────────────────────────────
+function getIngredientes() {
+  const sheet = getSheet('Ingredientes');
+  const rows = sheet.getDataRange().getValues();
+  return rows.slice(1).filter(r => r[0]).map(r => ({
+    id:        String(r[0]),
+    nombre:    r[1],
+    unidad:    r[2],
+    categoria: r[3],
+  }));
+}
+
+// ── RECETAS ─────────────────────────────────────────────────────────
+function getRecetas() {
+  const sheet = getSheet('Recetas');
+  const rows = sheet.getDataRange().getValues();
+  return rows.slice(1).filter(r => r[0]).map(r => ({
+    idPlato:        String(r[0]),
+    nombrePlato:    r[1],
+    idIngrediente:  String(r[2]),
+    nombreIng:      r[3],
+    cantidad:       r[4],
+    unidad:         r[5],
+    notas:          r[6] || '',
+  }));
+}
+
+// ── PLAN SEMANAL ────────────────────────────────────────────────────
+function getPlanSemanal() {
+  const sheet = getSheet('Plan semanal');
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) return {};
+
+  const dias = rows[0].slice(1);
+  const plan = {};
+
+  rows.slice(1).forEach(row => {
+    const momento = row[0];
+    if (!momento) return;
+    row.slice(1).forEach((val, i) => {
+      const dia = dias[i];
+      if (!dia) return;
+      if (!plan[dia]) plan[dia] = {};
+      plan[dia][momento] = val ? String(val) : null;
+    });
+  });
+
+  return plan;
+}
+
+function setPlanSemanal(plan) {
+  if (!plan) return false;
+
+  const sheet = getSheet('Plan semanal');
+  const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  const momentos = ['Desayuno', 'Comida', 'Cena'];
+
+  // Ensure header row
+  sheet.clearContents();
+  const header = ['Momento', ...dias];
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+
+  momentos.forEach((momento, ri) => {
+    const row = [momento, ...dias.map(d => (plan[d] && plan[d][momento]) ? plan[d][momento] : '')];
+    sheet.getRange(ri + 2, 1, 1, row.length).setValues([row]);
+  });
+
+  return true;
+}
+
+// ── AÑADIR PLATO ────────────────────────────────────────────────────
+function addPlato(platoData, ingredientesData) {
+  if (!platoData || !platoData.nombre) throw new Error('Nombre de plato requerido');
+
+  const platosSheet = getSheet('Platos');
+  const recetasSheet = getSheet('Recetas');
+
+  // Get next ID
+  const lastRow = platosSheet.getLastRow();
+  const ids = platosSheet.getRange(2, 1, Math.max(lastRow - 1, 1)).getValues().flat().filter(Boolean);
+  const maxId = ids.reduce((m, v) => Math.max(m, parseFloat(v) || 0), 0);
+  const newId = maxId + 1;
+
+  // Add plato row
+  platosSheet.appendRow([newId, platoData.nombre, platoData.momento, platoData.categoria]);
+
+  // Add receta rows
+  if (Array.isArray(ingredientesData)) {
+    ingredientesData.forEach(ing => {
+      recetasSheet.appendRow([
+        newId, platoData.nombre,
+        ing.id, ing.nombre,
+        ing.cantidad, ing.unidad,
+        ing.notas || ''
+      ]);
+    });
+  }
+
+  return { id: newId };
+}
