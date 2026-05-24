@@ -124,7 +124,7 @@ export default function App() {
       <header className="app-header">
         <div className="header-inner">
           <span className="header-logo">🌿</span>
-          <h1 className="header-title">Mi Dieta</h1>
+          <h1 className="header-title">Nutry</h1>
           {saving && <span className="saving-badge">Guardando…</span>}
         </div>
       </header>

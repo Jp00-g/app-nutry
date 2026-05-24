@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#1a1a2e">
-  <title>Mi Dieta</title>
+  <title>Nutry</title>
   <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
@@ -322,32 +322,10 @@
 
 <!-- LOADING -->
 <div id="loading">
-  <div class="logo">🥗 Mi Dieta</div>
+  <div class="logo">🥗 Nutry</div>
   <div class="spinner"></div>
 </div>
 
-<!-- SETUP -->
-<div id="setup">
-  <h1>Configura <span>Mi Dieta</span></h1>
-  <p>Esta app usa Google Sheets para sincronizar los datos entre tú y tu pareja. Solo necesitas configurarlo una vez.</p>
-
-  <div class="setup-step">
-    <label>PASO 1 — Abre Google Apps Script</label>
-    <p style="color:var(--text-muted);font-size:0.85rem">Ve a <strong style="color:var(--accent2)">script.google.com</strong>, crea un proyecto nuevo y pega el código que encontrarás en el archivo <code style="color:var(--accent)">apps-script.js</code> del ZIP.</p>
-  </div>
-
-  <div class="setup-step">
-    <label>PASO 2 — Despliega como Web App</label>
-    <p style="color:var(--text-muted);font-size:0.85rem">En Apps Script: Implementar → Nueva implementación → Web App → Acceso: <strong style="color:var(--accent2)">Cualquier usuario</strong> → Implementar. Copia la URL que te da.</p>
-  </div>
-
-  <div class="setup-step">
-    <label>PASO 3 — Pega la URL aquí</label>
-    <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/..." />
-  </div>
-
-  <button class="btn-primary" onclick="saveConfig()">Guardar y continuar →</button>
-</div>
 
 <!-- APP -->
 <div id="app" style="display:none">
@@ -494,7 +472,6 @@ const CAT_COLORS = {
   'WRAP':'#f8bbd0','TOSTAS/SANDWICH':'#fff9c4','PLATO':'#e1bee7','OTROS':'#cfd8dc'
 };
 
-let SCRIPT_URL = localStorage.getItem('scriptUrl') || '';
 let platos = [], recetas = [], plan = {}, personas = 2;
 let modalTarget = null, filterCat = 'Todos';
 let recetaFilterCat = 'Todos';
@@ -503,11 +480,6 @@ let recetaFilterCat = 'Todos';
 //  INIT
 // ═══════════════════════════════════════════
 async function init() {
-  if (!SCRIPT_URL) {
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('setup').style.display = 'flex';
-    return;
-  }
   try {
     await loadData();
     document.getElementById('loading').style.display = 'none';
@@ -517,45 +489,17 @@ async function init() {
     renderRecetas();
   } catch(e) {
     document.getElementById('loading').innerHTML = `
-      <div class="logo">🥗 Mi Dieta</div>
+      <div class="logo">🥗 Nutry</div>
       <p style="color:var(--accent3);text-align:center;padding:0 24px;font-size:0.9rem">
-        Error conectando con Google Sheets.<br>Comprueba la URL en Ajustes.
+        Error conectando con Firebase.<br>Comprueba la configuración.
       </p>
-      <button class="btn-primary" style="margin:0 24px" onclick="resetConfig()">Reconfigurar</button>
     `;
   }
-}
-
-function saveConfig() {
-  const url = document.getElementById('script-url').value.trim();
-  if (!url.includes('script.google.com')) { showToast('URL no válida'); return; }
-  localStorage.setItem('scriptUrl', url);
-  SCRIPT_URL = url;
-  document.getElementById('setup').style.display = 'none';
-  document.getElementById('loading').style.display = 'flex';
-  init();
-}
-
-function resetConfig() {
-  localStorage.removeItem('scriptUrl');
-  location.reload();
 }
 
 // ═══════════════════════════════════════════
 //  DATA
 // ═══════════════════════════════════════════
-async function api(action, payload={}) {
-  setSyncState('syncing');
-  const url = SCRIPT_URL + '?action=' + action + '&t=' + Date.now();
-  const res = await fetch(url, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: {'Content-Type':'text/plain'}
-  });
-  const data = await res.json();
-  setSyncState('ok');
-  return data;
-}
 
 async function loadData() {
   const d = await api('getData');
