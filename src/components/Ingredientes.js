@@ -59,7 +59,12 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
 
   return (
     <>
-      <p className="section-title">Ingredientes</p>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
+        <p className="section-title" style={{ padding: 0, flex: 1 }}>Ingredientes</p>
+        <button className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '7px 14px', fontSize: 13 }} onClick={openAdd}>
+          + Nuevo
+        </button>
+      </div>
       <p className="section-sub">{ingredientes.length} ingredientes en total</p>
 
       <div className="catalogo-wrap">
@@ -103,9 +108,6 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
           </div>
         )}
 
-        <button className="btn-primary" style={{ width: '100%', marginTop: 20 }} onClick={openAdd}>
-          + Nuevo ingrediente
-        </button>
       </div>
 
       {modal && (
@@ -131,11 +133,16 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd }) {
               </div>
               <div className="form-group">
                 <label>Unidad</label>
-                <input
+                <select
                   value={form.unidad}
                   onChange={e => setForm(f => ({ ...f, unidad: e.target.value }))}
-                  placeholder="ej. g, ud, ml, kg"
-                />
+                >
+                  <option value="ud">ud</option>
+                  <option value="g">g</option>
+                  <option value="kg">kg</option>
+                  <option value="ml">ml</option>
+                  <option value="L">L</option>
+                </select>
               </div>
               <div className="form-group">
                 <label>Categoría</label>

@@ -55,7 +55,7 @@ export default function ListaCompra({ lista, plan, platos, dias, momentos }) {
         <p className="section-title">Lista de la compra</p>
         <div className="compra-empty">
           <div className="compra-empty-icon">🛒</div>
-          <p>Aún no has seleccionado platos en el plan semanal.<br />¡Empieza por ahí!</p>
+          <p>Aún no has seleccionado recetas en el plan semanal.<br />¡Empieza por ahí!</p>
         </div>
       </div>
     );
@@ -64,7 +64,7 @@ export default function ListaCompra({ lista, plan, platos, dias, momentos }) {
   return (
     <>
       <p className="section-title">Lista de la compra</p>
-      <p className="section-sub">{numPlatos} platos · {lista.length} ingredientes</p>
+      <p className="section-sub">{numPlatos} recetas · {lista.length} ingredientes</p>
 
       <div className="compra-wrap">
         <div className="compra-actions">

@@ -79,7 +79,7 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
 
   return (
     <>
-      <p className="section-title">Añadir plato</p>
+      <p className="section-title">Nueva receta</p>
       <p className="section-sub">Rellena los datos y los ingredientes</p>
 
       <div className="anadir-wrap">

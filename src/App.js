@@ -13,8 +13,7 @@ const MOMENTOS = ['Desayuno', 'Comida', 'Cena'];
 const NAV = [
   { id: 'plan', label: 'Plan', icon: '🗓️' },
   { id: 'compra', label: 'Compra', icon: '🛒' },
-  { id: 'catalogo', label: 'Platos', icon: '🍽️' },
-  { id: 'anadir', label: 'Añadir', icon: '➕' },
+  { id: 'catalogo', label: 'Recetas', icon: '🍽️' },
   { id: 'ingredientes', label: 'Ingred.', icon: '🥕' },
 ];
 
@@ -26,6 +25,7 @@ const emptyPlan = () => {
 
 export default function App() {
   const [tab, setTab] = useState('plan');
+  const [catalogoView, setCatalogoView] = useState('list'); // 'list' | 'add'
   const [platos, setPlatos] = useState([]);
   const [ingredientes, setIngredientes] = useState([]);
   const [recetas, setRecetas] = useState([]);
@@ -165,18 +165,19 @@ export default function App() {
                 momentos={MOMENTOS}
               />
             )}
-            {tab === 'catalogo' && (
+            {tab === 'catalogo' && catalogoView === 'list' && (
               <Catalogo
                 platos={platos}
                 recetas={recetas}
                 ingredientes={ingredientes}
+                onAnadir={() => setCatalogoView('add')}
               />
             )}
-            {tab === 'anadir' && (
+            {tab === 'catalogo' && catalogoView === 'add' && (
               <AnadirPlato
                 ingredientes={ingredientes}
                 onAdd={addPlato}
-                onDone={() => setTab('catalogo')}
+                onDone={() => setCatalogoView('list')}
               />
             )}
             {tab === 'ingredientes' && (
@@ -196,7 +197,7 @@ export default function App() {
           <button
             key={n.id}
             className={`nav-item ${tab === n.id ? 'active' : ''}`}
-            onClick={() => setTab(n.id)}
+            onClick={() => { setTab(n.id); setCatalogoView('list'); }}
           >
             <span className="nav-icon">{n.icon}</span>
             <span className="nav-label">{n.label}</span>

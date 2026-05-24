@@ -6,7 +6,7 @@ const CAT_CLASS = {
   WRAP: 'cat-wrap', PLATO: 'cat-otros',
 };
 
-export default function Catalogo({ platos, recetas, ingredientes }) {
+export default function Catalogo({ platos, recetas, ingredientes, onAnadir }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
   const [open, setOpen] = useState(null);
@@ -28,8 +28,13 @@ export default function Catalogo({ platos, recetas, ingredientes }) {
 
   return (
     <>
-      <p className="section-title">Catálogo de platos</p>
-      <p className="section-sub">{platos.length} platos disponibles</p>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
+        <p className="section-title" style={{ padding: 0, flex: 1 }}>Recetas</p>
+        <button className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '7px 14px', fontSize: 13 }} onClick={onAnadir}>
+          + Nueva
+        </button>
+      </div>
+      <p className="section-sub">{platos.length} recetas disponibles</p>
 
       <div className="catalogo-wrap">
         <div className="catalogo-search">
@@ -89,9 +94,10 @@ export default function Catalogo({ platos, recetas, ingredientes }) {
 
         {filtered.length === 0 && (
           <p style={{ color: 'var(--text3)', fontSize: 14, textAlign: 'center', padding: '40px 0' }}>
-            No se encontraron platos
+            No se encontraron recetas
           </p>
         )}
+
       </div>
     </>
   );

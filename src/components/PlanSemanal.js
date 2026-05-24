@@ -132,7 +132,7 @@ export default function PlanSemanal({ plan, platos, dias, momentos, onUpdate, ge
               ))}
               {filteredPlatos.length === 0 && (
                 <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
-                  No hay platos con ese nombre
+                  No hay recetas con ese nombre
                 </p>
               )}
             </div>
