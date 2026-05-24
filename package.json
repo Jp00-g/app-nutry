@@ -2,7 +2,7 @@
   "name": "diet-app",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://Jp00-g.github.io/diet-app",
+  "homepage": "https://jp00-g.github.io/app-nutry/",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
