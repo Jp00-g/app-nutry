@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos'];
-const CATS_COMIDA = ['CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'OTROS'];
-const CATS_CENA = ['WRAP', 'ENSALADAS', 'CUCHARA', 'TOSTAS/SANDWICH', 'PLATO', 'CARNES'];
-const CATS_DESAYUNO = ['DULCE', 'SALADO', 'SMOOTHIE', 'OTROS'];
 
-export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
+export default function AnadirPlato({ ingredientes, categorias, onAdd, onDone }) {
   const [nombre, setNombre] = useState('');
   const [momento, setMomento] = useState('Comidas');
   const [categoria, setCategoria] = useState('CARNES');
@@ -39,7 +36,7 @@ export default function AnadirPlato({ ingredientes, onAdd, onDone }) {
     return acc;
   }, {});
 
-  const cats = momento === 'Comidas' ? CATS_COMIDA : momento === 'Desayunos' ? CATS_DESAYUNO : CATS_CENA;
+  const cats = categorias.filter(c => c.momentos.includes(momento)).map(c => c.nombre);
 
   const addIngRow = () => {
     if (!selIng || !selCant) return;

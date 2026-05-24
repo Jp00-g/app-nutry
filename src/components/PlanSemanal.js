@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 
-const CATS = ['Todo', 'CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'WRAP', 'PLATO'];
-const CAT_CLASS = {
-  CARNES: 'cat-carnes', ENSALADAS: 'cat-ensaladas', CUCHARA: 'cat-cuchara',
-  PASTA: 'cat-pasta', ARROZ: 'cat-arroz', PESCADO: 'cat-pescado',
-  WRAP: 'cat-wrap', PLATO: 'cat-otros',
-};
+const MOMENTO_MAP = { 'Desayuno': 'Desayunos', 'Comida': 'Comidas', 'Cena': 'Cenas' };
 
-function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoById }) {
+function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdate, getPlatoById }) {
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
@@ -23,11 +18,13 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoB
     closeModal();
   };
 
+  const catColorMap = Object.fromEntries(categorias.map(c => [c.nombre, c.colorClass]));
+  const catsForModal = modal
+    ? ['Todo', ...categorias.filter(c => c.momentos.includes(MOMENTO_MAP[modal.momento])).map(c => c.nombre)]
+    : ['Todo'];
+
   const filteredPlatos = platos.filter(p => {
-    const matchMomento = modal ? (
-      modal.momento === 'Desayuno' ? true :
-      modal.momento === 'Comida' ? p.momento === 'Comidas' : p.momento === 'Cenas'
-    ) : true;
+    const matchMomento = modal ? p.momento === MOMENTO_MAP[modal.momento] : true;
     const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
     const matchCat = catFilter === 'Todo' || p.categoria === catFilter;
     return matchMomento && matchSearch && matchCat;
@@ -86,7 +83,7 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoB
               />
             </div>
             <div className="modal-cats">
-              {CATS.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
+              {catsForModal.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
                 <button
                   key={c}
                   className={`cat-filter ${catFilter === c ? 'active' : ''}`}
@@ -108,7 +105,7 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoB
                   className={`plato-option ${currentSelection === p.id ? 'selected' : ''}`}
                   onClick={() => selectPlato(p.id)}
                 >
-                  <span className={`chip ${CAT_CLASS[p.categoria] || ''}`}>{p.categoria}</span>
+                  <span className={`chip ${catColorMap[p.categoria] || ''}`}>{p.categoria}</span>
                   <span className="plato-option-name">{p.nombre}</span>
                   <div className="plato-option-check">{currentSelection === p.id ? '✓' : ''}</div>
                 </div>
@@ -126,7 +123,7 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, onUpdate, getPlatoB
   );
 }
 
-export default function PlanSemanal({ plans, platos, dias, momentos, onUpdate, getPlatoById }) {
+export default function PlanSemanal({ plans, platos, dias, momentos, categorias, onUpdate, getPlatoById }) {
   return (
     <>
       <p className="section-title">Plan semanal</p>
@@ -143,6 +140,7 @@ export default function PlanSemanal({ plans, platos, dias, momentos, onUpdate, g
             platos={platos}
             dias={dias}
             momentos={momentos}
+            categorias={categorias}
             onUpdate={onUpdate}
             getPlatoById={getPlatoById}
           />

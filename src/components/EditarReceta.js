@@ -1,11 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos'];
-const CATS_COMIDA = ['CARNES', 'ENSALADAS', 'CUCHARA', 'PASTA', 'ARROZ', 'PESCADO', 'OTROS'];
-const CATS_CENA = ['WRAP', 'ENSALADAS', 'CUCHARA', 'TOSTAS/SANDWICH', 'PLATO', 'CARNES'];
-const CATS_DESAYUNO = ['DULCE', 'SALADO', 'SMOOTHIE', 'OTROS'];
 
-export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpdate, onDone, onToast }) {
+export default function EditarReceta({ plato, recetasPlato, ingredientes, categorias, onUpdate, onDone, onToast }) {
   const [nombre, setNombre] = useState(plato.nombre);
   const [momento, setMomento] = useState(plato.momento);
   const [categoria, setCategoria] = useState(plato.categoria);
@@ -32,7 +29,7 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, onUpda
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const cats = momento === 'Comidas' ? CATS_COMIDA : momento === 'Desayunos' ? CATS_DESAYUNO : CATS_CENA;
+  const cats = categorias.filter(c => c.momentos.includes(momento)).map(c => c.nombre);
 
   const selectedIng = ingredientes.find(i => String(i.id) === selIng);
 

@@ -31,6 +31,7 @@ export default function App() {
   const [platos, setPlatos] = useState([]);
   const [ingredientes, setIngredientes] = useState([]);
   const [recetas, setRecetas] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [plans, setPlans] = useState([emptyPlan(), emptyPlan(), emptyPlan(), emptyPlan()]);
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -49,10 +50,11 @@ export default function App() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [p, i, r, pl1, pl2, pl3, pl4] = await Promise.all([
+      const [p, i, r, cats, pl1, pl2, pl3, pl4] = await Promise.all([
         api.getPlatos(),
         api.getIngredientes(),
         api.getRecetas(),
+        api.getCategorias(),
         api.getPlanSemana(1),
         api.getPlanSemana(2),
         api.getPlanSemana(3),
@@ -61,6 +63,7 @@ export default function App() {
       setPlatos(p || []);
       setIngredientes(i || []);
       setRecetas(r || []);
+      setCategorias(cats || []);
       setPlans([pl1, pl2, pl3, pl4].map(pl => {
         const base = emptyPlan();
         if (pl) Object.keys(pl).forEach(d => { if (base[d]) Object.assign(base[d], pl[d]); });
@@ -175,6 +178,7 @@ export default function App() {
                 platos={platos}
                 dias={DIAS}
                 momentos={MOMENTOS}
+                categorias={categorias}
                 onUpdate={updatePlan}
                 getPlatoById={getPlatoById}
               />
@@ -192,6 +196,7 @@ export default function App() {
               <Catalogo
                 platos={platos}
                 recetas={recetas}
+                categorias={categorias}
                 onAnadir={() => setCatalogoView('add')}
                 onEditar={(plato) => { setEditingPlato(plato); setCatalogoView('edit'); }}
                 onDelete={deletePlato}
@@ -200,6 +205,7 @@ export default function App() {
             {tab === 'catalogo' && catalogoView === 'add' && (
               <AnadirPlato
                 ingredientes={ingredientes}
+                categorias={categorias}
                 onAdd={addPlato}
                 onDone={() => setCatalogoView('list')}
               />
@@ -209,6 +215,7 @@ export default function App() {
                 plato={editingPlato}
                 recetasPlato={recetas.filter(r => String(r.idPlato) === String(editingPlato.id))}
                 ingredientes={ingredientes}
+                categorias={categorias}
                 onUpdate={updateReceta}
                 onDone={() => { setEditingPlato(null); setCatalogoView('list'); }}
                 onToast={showToast}

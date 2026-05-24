@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 
-const CAT_CLASS = {
-  CARNES: 'cat-carnes', ENSALADAS: 'cat-ensaladas', CUCHARA: 'cat-cuchara',
-  PASTA: 'cat-pasta', ARROZ: 'cat-arroz', PESCADO: 'cat-pescado',
-  WRAP: 'cat-wrap', PLATO: 'cat-otros',
-};
-
 const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos'];
 
-export default function Catalogo({ platos, recetas, onAnadir, onEditar, onDelete }) {
+export default function Catalogo({ platos, recetas, categorias, onAnadir, onEditar, onDelete }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todas');
   const [momentoFilter, setMomentoFilter] = useState('Todos');
@@ -29,6 +23,7 @@ export default function Catalogo({ platos, recetas, onAnadir, onEditar, onDelete
     }
   };
 
+  const catColorMap = Object.fromEntries(categorias.map(c => [c.nombre, c.colorClass]));
   const cats = ['Todas', ...new Set(platos.map(p => p.categoria))];
 
   const filtered = platos.filter(p => {
@@ -90,7 +85,7 @@ export default function Catalogo({ platos, recetas, onAnadir, onEditar, onDelete
           return (
             <div key={plato.id} className="plato-card">
               <div className="plato-card-header" onClick={() => setOpen(isOpen ? null : plato.id)}>
-                <span className={`chip ${CAT_CLASS[plato.categoria] || ''}`}>{plato.categoria}</span>
+                <span className={`chip ${catColorMap[plato.categoria] || ''}`}>{plato.categoria}</span>
                 <span className="plato-card-name">{plato.nombre}</span>
                 <button
                   className="btn-danger"

@@ -7,6 +7,23 @@ import { db } from './firebase';
 
 const toArr = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+const DEFAULT_CATEGORIAS = [
+  { nombre: 'CARNES',          momentos: ['Comidas', 'Cenas'],              colorClass: 'cat-carnes',    orden: 1  },
+  { nombre: 'ENSALADAS',       momentos: ['Comidas', 'Cenas'],              colorClass: 'cat-ensaladas', orden: 2  },
+  { nombre: 'CUCHARA',         momentos: ['Comidas', 'Cenas'],              colorClass: 'cat-cuchara',   orden: 3  },
+  { nombre: 'PASTA',           momentos: ['Comidas'],                       colorClass: 'cat-pasta',     orden: 4  },
+  { nombre: 'ARROZ',           momentos: ['Comidas'],                       colorClass: 'cat-arroz',     orden: 5  },
+  { nombre: 'PESCADO',         momentos: ['Comidas'],                       colorClass: 'cat-pescado',   orden: 6  },
+  { nombre: 'WRAP',            momentos: ['Cenas'],                         colorClass: 'cat-wrap',      orden: 7  },
+  { nombre: 'TOSTAS/SANDWICH', momentos: ['Cenas'],                         colorClass: '',              orden: 8  },
+  { nombre: 'PLATO',           momentos: ['Cenas'],                         colorClass: 'cat-otros',     orden: 9  },
+  { nombre: 'OTROS',           momentos: ['Comidas', 'Cenas'],              colorClass: '',              orden: 10 },
+  { nombre: 'DULCE',           momentos: ['Desayunos'],                     colorClass: '',              orden: 11 },
+  { nombre: 'TOSTAS',          momentos: ['Desayunos'],                     colorClass: '',              orden: 12 },
+  { nombre: 'SMOOTHIE',        momentos: ['Desayunos'],                     colorClass: '',              orden: 13 },
+  { nombre: 'OTROS',           momentos: ['Desayunos'],                     colorClass: '',              orden: 14 },
+];
+
 export const api = {
   getPlatos: () => getDocs(collection(db, 'platos')).then(toArr),
 
@@ -14,10 +31,19 @@ export const api = {
 
   getRecetas: () => getDocs(collection(db, 'recetas')).then(toArr),
 
+  getCategorias: async () => {
+    const snap = await getDocs(collection(db, 'categorias'));
+    if (!snap.empty) return toArr(snap).sort((a, b) => a.orden - b.orden);
+    const batch = writeBatch(db);
+    DEFAULT_CATEGORIAS.forEach(cat => batch.set(doc(collection(db, 'categorias')), cat));
+    await batch.commit();
+    const fresh = await getDocs(collection(db, 'categorias'));
+    return toArr(fresh).sort((a, b) => a.orden - b.orden);
+  },
+
   getPlanSemana: async (n) => {
     const snap = await getDoc(doc(db, 'config', `semana${n}`));
     if (snap.exists()) return snap.data();
-    // Fallback: semana 1 puede estar en el doc antiguo
     if (n === 1) {
       const old = await getDoc(doc(db, 'config', 'planSemanal'));
       return old.exists() ? old.data() : {};
