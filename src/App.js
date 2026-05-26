@@ -66,7 +66,14 @@ export default function App() {
       setCategorias(cats || []);
       setPlans([pl1, pl2, pl3, pl4].map(pl => {
         const base = emptyPlan();
-        if (pl) Object.keys(pl).forEach(d => { if (base[d]) Object.assign(base[d], pl[d]); });
+        if (pl) Object.keys(pl).forEach(d => {
+          if (base[d]) Object.keys(pl[d]).forEach(m => {
+            const val = pl[d][m];
+            if (!val) base[d][m] = null;
+            else if (typeof val === 'string') base[d][m] = { id: val, personas: 1 };
+            else base[d][m] = val;
+          });
+        });
         return base;
       }));
     } catch (e) {
@@ -88,9 +95,10 @@ export default function App() {
     setSaving(false);
   };
 
-  const updatePlan = async (weekIdx, dia, momento, platoId) => {
+  const updatePlan = async (weekIdx, dia, momento, platoId, personas = 1) => {
     const cur = plans[weekIdx];
-    const next = { ...cur, [dia]: { ...cur[dia], [momento]: platoId } };
+    const entry = platoId === null ? null : { id: platoId, personas };
+    const next = { ...cur, [dia]: { ...cur[dia], [momento]: entry } };
     const newPlans = [...plans];
     newPlans[weekIdx] = next;
     setPlans(newPlans);
@@ -136,7 +144,10 @@ export default function App() {
     const totales = {};
     DIAS.forEach(dia => {
       MOMENTOS.forEach(momento => {
-        const platoId = plan[dia]?.[momento];
+        const entry = plan[dia]?.[momento];
+        if (!entry) return;
+        const platoId = typeof entry === 'object' ? entry.id : entry;
+        const personas = typeof entry === 'object' ? (entry.personas || 1) : 1;
         if (!platoId) return;
         const recetasPlato = recetas.filter(r => String(r.idPlato) === String(platoId));
         recetasPlato.forEach(r => {
@@ -147,7 +158,7 @@ export default function App() {
             totales[key] = { nombre: r.nombreIng, unidad: ing?.unidad || r.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
           }
           const cant = parseFloat(r.cantidad);
-          if (!isNaN(cant)) totales[key].cantidad += cant;
+          if (!isNaN(cant)) totales[key].cantidad += cant * personas;
         });
       });
     });

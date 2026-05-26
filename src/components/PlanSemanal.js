@@ -2,19 +2,37 @@ import React, { useState } from 'react';
 
 const MOMENTO_MAP = { 'Desayuno': 'Desayunos', 'Comida': 'Comidas', 'Cena': 'Cenas' };
 
+const getEntryId = (entry) => entry && typeof entry === 'object' ? entry.id : entry;
+const getEntryPersonas = (entry) => entry && typeof entry === 'object' ? (entry.personas || 1) : 1;
+
 function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdate, getPlatoById }) {
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
+  const [personasStep, setPersonasStep] = useState(null); // { id, personas }
 
   const openModal = (dia, momento) => {
     setSearch('');
     setCatFilter('Todo');
+    setPersonasStep(null);
     setModal({ dia, momento });
   };
-  const closeModal = () => setModal(null);
+  const closeModal = () => { setModal(null); setPersonasStep(null); };
+
   const selectPlato = (id) => {
-    onUpdate(weekIdx, modal.dia, modal.momento, id);
+    if (id === null) {
+      onUpdate(weekIdx, modal.dia, modal.momento, null, 1);
+      closeModal();
+      return;
+    }
+    const currentEntry = plan[modal.dia]?.[modal.momento];
+    const currentId = getEntryId(currentEntry);
+    const currentPersonas = id === currentId ? getEntryPersonas(currentEntry) : 1;
+    setPersonasStep({ id, personas: currentPersonas });
+  };
+
+  const confirmPersonas = () => {
+    onUpdate(weekIdx, modal.dia, modal.momento, personasStep.id, personasStep.personas);
     closeModal();
   };
 
@@ -30,7 +48,8 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
     return matchMomento && matchSearch && matchCat;
   });
 
-  const currentSelection = modal ? plan[modal.dia]?.[modal.momento] : null;
+  const currentEntry = modal ? plan[modal.dia]?.[modal.momento] : null;
+  const currentSelectionId = getEntryId(currentEntry);
 
   return (
     <>
@@ -46,7 +65,9 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
                 {momento === 'Desayuno' ? '🌅' : momento === 'Comida' ? '☀️' : '🌙'} {momento}
               </div>
               {dias.map(dia => {
-                const platoId = plan[dia]?.[momento];
+                const entry = plan[dia]?.[momento];
+                const platoId = getEntryId(entry);
+                const personas = getEntryPersonas(entry);
                 const plato = platoId ? getPlatoById(platoId) : null;
                 return (
                   <div
@@ -55,7 +76,10 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
                     onClick={() => openModal(dia, momento)}
                   >
                     {plato
-                      ? <span className="plan-cell-name">{plato.nombre}</span>
+                      ? <>
+                          <span className="plan-cell-name">{plato.nombre}</span>
+                          {personas > 1 && <span className="plan-cell-personas">×{personas}</span>}
+                        </>
                       : <span className="plan-cell-empty">＋</span>
                     }
                   </div>
@@ -71,51 +95,80 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />
             <div className="modal-header">
-              <span className="modal-title">{modal.momento} · {modal.dia}</span>
+              <span className="modal-title">
+                {personasStep && (
+                  <button className="modal-back" onClick={() => setPersonasStep(null)}>←</button>
+                )}
+                {modal.momento} · {modal.dia}
+              </span>
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
-            <div className="modal-search">
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar plato…"
-                autoComplete="off"
-              />
-            </div>
-            <div className="modal-cats">
-              {catsForModal.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
-                <button
-                  key={c}
-                  className={`cat-filter ${catFilter === c ? 'active' : ''}`}
-                  onClick={() => setCatFilter(c)}
-                >
-                  {c}
+
+            {personasStep ? (
+              <div className="personas-step">
+                <p className="personas-step-plato">{getPlatoById(personasStep.id)?.nombre}</p>
+                <p className="personas-step-label">¿Para cuántas personas?</p>
+                <div className="personas-counter">
+                  <button
+                    className="personas-counter-btn"
+                    onClick={() => setPersonasStep(s => ({ ...s, personas: Math.max(1, s.personas - 1) }))}
+                  >−</button>
+                  <span className="personas-counter-val">{personasStep.personas}</span>
+                  <button
+                    className="personas-counter-btn"
+                    onClick={() => setPersonasStep(s => ({ ...s, personas: Math.min(20, s.personas + 1) }))}
+                  >+</button>
+                </div>
+                <button className="btn-primary personas-confirm" onClick={confirmPersonas}>
+                  Confirmar
                 </button>
-              ))}
-            </div>
-            <div className="modal-list">
-              {currentSelection && (
-                <div className="clear-option" onClick={() => selectPlato(null)}>
-                  <span>🗑️</span> Quitar plato
+              </div>
+            ) : (
+              <>
+                <div className="modal-search">
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Buscar plato…"
+                    autoComplete="off"
+                  />
                 </div>
-              )}
-              {filteredPlatos.map(p => (
-                <div
-                  key={p.id}
-                  className={`plato-option ${currentSelection === p.id ? 'selected' : ''}`}
-                  onClick={() => selectPlato(p.id)}
-                >
-                  <span className={`chip ${catColorMap[p.categoria] || ''}`}>{p.categoria}</span>
-                  <span className="plato-option-name">{p.nombre}</span>
-                  <div className="plato-option-check">{currentSelection === p.id ? '✓' : ''}</div>
+                <div className="modal-cats">
+                  {catsForModal.filter(c => c === 'Todo' || filteredPlatos.some(p => p.categoria === c) || catFilter === c).map(c => (
+                    <button
+                      key={c}
+                      className={`cat-filter ${catFilter === c ? 'active' : ''}`}
+                      onClick={() => setCatFilter(c)}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
-              ))}
-              {filteredPlatos.length === 0 && (
-                <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
-                  No hay recetas con ese nombre
-                </p>
-              )}
-            </div>
+                <div className="modal-list">
+                  {currentSelectionId && (
+                    <div className="clear-option" onClick={() => selectPlato(null)}>
+                      <span>🗑️</span> Quitar plato
+                    </div>
+                  )}
+                  {filteredPlatos.map(p => (
+                    <div
+                      key={p.id}
+                      className={`plato-option ${currentSelectionId === p.id ? 'selected' : ''}`}
+                      onClick={() => selectPlato(p.id)}
+                    >
+                      <span className={`chip ${catColorMap[p.categoria] || ''}`}>{p.categoria}</span>
+                      <span className="plato-option-name">{p.nombre}</span>
+                      <div className="plato-option-check">{currentSelectionId === p.id ? '✓' : ''}</div>
+                    </div>
+                  ))}
+                  {filteredPlatos.length === 0 && (
+                    <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
+                      No hay recetas con ese nombre
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

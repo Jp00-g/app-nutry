@@ -507,6 +507,85 @@ label {
   opacity: 0.5;
 }
 
+.plan-cell-personas {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8B5CF6;
+  opacity: 0.85;
+}
+
+.modal-back {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 6px 0 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.personas-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 40px;
+  gap: 14px;
+}
+
+.personas-step-plato {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  margin: 0;
+}
+
+.personas-step-label {
+  font-size: 14px;
+  color: var(--text2);
+  margin: 0;
+}
+
+.personas-counter {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 8px 0;
+}
+
+.personas-counter-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s;
+}
+
+.personas-counter-btn:active { background: var(--surface); }
+
+.personas-counter-val {
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 56px;
+  text-align: center;
+  line-height: 1;
+  font-family: var(--font-head);
+}
+
+.personas-confirm {
+  width: 100%;
+  margin-top: 4px;
+}
+
 /* Modal de selección de plato */
 .modal-overlay {
   position: fixed;
