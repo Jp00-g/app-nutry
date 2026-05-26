@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos'];
+const MOMENTOS_OPT = ['Comidas', 'Cenas', 'Desayunos', 'Comidas o cenas', 'Desayunos o cenas'];
 
 export default function EditarReceta({ plato, recetasPlato, ingredientes, categorias, onUpdate, onDone, onToast }) {
   const [nombre, setNombre] = useState(plato.nombre);
@@ -29,7 +29,11 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, catego
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const cats = categorias.filter(c => c.momentos.includes(momento)).map(c => c.nombre);
+  const cats = momento === 'Comidas o cenas'
+    ? categorias.filter(c => c.momentos.includes('Comidas') || c.momentos.includes('Cenas')).map(c => c.nombre)
+    : momento === 'Desayunos o cenas'
+    ? categorias.filter(c => c.momentos.includes('Desayunos') || c.momentos.includes('Cenas')).map(c => c.nombre)
+    : categorias.filter(c => c.momentos.includes(momento)).map(c => c.nombre);
 
   const selectedIng = ingredientes.find(i => String(i.id) === selIng);
 
@@ -91,7 +95,16 @@ export default function EditarReceta({ plato, recetasPlato, ingredientes, catego
 
         <div className="form-group">
           <label>Momento</label>
-          <select value={momento} onChange={e => { setMomento(e.target.value); setCategoria(''); }}>
+          <select value={momento} onChange={e => {
+            const newMomento = e.target.value;
+            const newCats = newMomento === 'Comidas o cenas'
+              ? categorias.filter(c => c.momentos.includes('Comidas') || c.momentos.includes('Cenas')).map(c => c.nombre)
+              : newMomento === 'Desayunos o cenas'
+              ? categorias.filter(c => c.momentos.includes('Desayunos') || c.momentos.includes('Cenas')).map(c => c.nombre)
+              : categorias.filter(c => c.momentos.includes(newMomento)).map(c => c.nombre);
+            setMomento(newMomento);
+            if (!newCats.includes(categoria)) setCategoria('');
+          }}>
             {MOMENTOS_OPT.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>

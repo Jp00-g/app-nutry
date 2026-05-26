@@ -42,10 +42,17 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
     : ['Todo'];
 
   const filteredPlatos = platos.filter(p => {
-    const matchMomento = modal ? p.momento === MOMENTO_MAP[modal.momento] : true;
+    const matchMomento = modal ? (
+      p.momento === MOMENTO_MAP[modal.momento] ||
+      (p.momento === 'Comidas o cenas' && (modal.momento === 'Comida' || modal.momento === 'Cena')) ||
+      (p.momento === 'Desayunos o cenas' && (modal.momento === 'Desayuno' || modal.momento === 'Cena'))
+    ) : true;
     const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase());
     const matchCat = catFilter === 'Todo' || p.categoria === catFilter;
     return matchMomento && matchSearch && matchCat;
+  }).sort((a, b) => {
+    const catDiff = (a.categoria || '').localeCompare(b.categoria || '');
+    return catDiff !== 0 ? catDiff : a.nombre.localeCompare(b.nombre);
   });
 
   const currentEntry = modal ? plan[modal.dia]?.[modal.momento] : null;

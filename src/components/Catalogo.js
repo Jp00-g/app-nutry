@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos'];
+const MOMENTOS = ['Todos', 'Comidas', 'Cenas', 'Desayunos', 'Comidas o cenas', 'Desayunos o cenas'];
 
 export default function Catalogo({ platos, recetas, categorias, onAnadir, onEditar, onDelete }) {
   const [search, setSearch] = useState('');

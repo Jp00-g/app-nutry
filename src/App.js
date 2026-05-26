@@ -137,7 +137,7 @@ export default function App() {
   const updateReceta = async (id, platoData, ingRows) => {
     await api.updatePlato(id, platoData);
     await api.updateRecetaIngredientes(id, ingRows);
-    await loadData();
+    await loadData(true);
   };
 
   const getPlatoById = (id) => platos.find(p => p.id === id);
@@ -159,7 +159,7 @@ export default function App() {
                      || ingredientes.find(i => i.nombre === r.nombreIng);
             totales[key] = { nombre: r.nombreIng, unidad: ing?.unidad || r.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
           }
-          const cant = parseFloat(r.cantidad);
+          const cant = parseFloat(String(r.cantidad).replace(',', '.'));
           if (!isNaN(cant)) totales[key].cantidad += cant * personas;
         });
       });

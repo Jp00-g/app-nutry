@@ -8,6 +8,8 @@ const UBICACION_CONFIG = {
   Casa:         { emoji: '🏠', color: '#4ADE80' },
 };
 
+const fmtCant = (n) => parseFloat(n.toFixed(2)).toString();
+
 function buildGrouped(lista) {
   const grouped = {};
   lista.forEach(item => {
@@ -29,7 +31,7 @@ function exportText(lista, weekNum) {
     Object.entries(cats).forEach(([cat, items]) => {
       lines.push(`  ── ${cat} ──`);
       items.forEach(i => {
-        const cant = i.cantidad > 0 ? `${Math.round(i.cantidad)} ${i.unidad}` : '';
+        const cant = i.cantidad > 0 ? `${fmtCant(i.cantidad)} ${i.unidad}` : '';
         lines.push(`    • ${i.nombre}${cant ? ` (${cant})` : ''}`);
       });
     });
@@ -122,7 +124,7 @@ function SemanaCard({ weekNum, lista }) {
                           </span>
                           {item.cantidad > 0 && (
                             <span className="compra-item-cant">
-                              {Math.round(item.cantidad)} {item.unidad}
+                              {fmtCant(item.cantidad)} {item.unidad}
                             </span>
                           )}
                         </div>
