@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 
 export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }) {
   const [search, setSearch] = useState('');
@@ -9,13 +9,22 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const savedScroll = useRef(0);
+
+  const backToList = () => {
+    setView('list');
+    requestAnimationFrame(() => {
+      const main = document.querySelector('.app-main');
+      if (main) main.scrollTop = savedScroll.current;
+    });
+  };
 
   const handleDelete = async () => {
     setDeleting(true);
     try {
       await onDelete(editingIng.id);
       setConfirmDelete(false);
-      setView('list');
+      backToList();
     } catch (e) {
       alert('Error: ' + e.message);
     } finally {
@@ -49,12 +58,14 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   }, [filtered]);
 
   const openEdit = (ing) => {
+    savedScroll.current = document.querySelector('.app-main')?.scrollTop || 0;
     setForm({ nombre: ing.nombre, unidad: ing.unidad || 'ud', categoria: ing.categoria || '', ubicacion: ing.ubicacion || 'Supermercado' });
     setEditingIng(ing);
     setView('edit');
   };
 
   const openAdd = () => {
+    savedScroll.current = document.querySelector('.app-main')?.scrollTop || 0;
     setForm({ nombre: '', unidad: 'ud', categoria: catFilter === 'Todo' ? '' : catFilter, ubicacion: 'Supermercado' });
     setEditingIng(null);
     setView('add');
@@ -69,7 +80,7 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
       } else {
         await onAdd(form);
       }
-      setView('list');
+      backToList();
     } catch (e) {
       alert('Error: ' + e.message);
     } finally {
@@ -84,7 +95,7 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
           <p className="section-title" style={{ padding: 0, flex: 1 }}>
             {view === 'edit' ? 'Editar ingrediente' : 'Nuevo ingrediente'}
           </p>
-          <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => setView('list')}>
+          <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={backToList}>
             Volver
           </button>
         </div>

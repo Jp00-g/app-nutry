@@ -39,6 +39,8 @@ export default function App() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
   const toastTimer = React.useRef(null);
+  const mainRef = React.useRef(null);
+  const catalogoScrollRef = React.useRef(0);
 
   const showToast = useCallback((msg) => {
     clearTimeout(toastTimer.current);
@@ -179,7 +181,7 @@ export default function App() {
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
 
       {/* Content */}
-      <main className="app-main">
+      <main className="app-main" ref={mainRef}>
 
         {loading ? (
           <div className="loading-screen">
@@ -220,8 +222,15 @@ export default function App() {
                 platos={platos}
                 recetas={recetas}
                 categorias={categorias}
-                onAnadir={() => setCatalogoView('add')}
-                onEditar={(plato) => { setEditingPlato(plato); setCatalogoView('edit'); }}
+                onAnadir={() => {
+                  catalogoScrollRef.current = mainRef.current?.scrollTop || 0;
+                  setCatalogoView('add');
+                }}
+                onEditar={(plato) => {
+                  catalogoScrollRef.current = mainRef.current?.scrollTop || 0;
+                  setEditingPlato(plato);
+                  setCatalogoView('edit');
+                }}
                 onDelete={deletePlato}
               />
             )}
@@ -230,7 +239,12 @@ export default function App() {
                 ingredientes={ingredientes}
                 categorias={categorias}
                 onAdd={addPlato}
-                onDone={() => setCatalogoView('list')}
+                onDone={() => {
+                  setCatalogoView('list');
+                  requestAnimationFrame(() => {
+                    if (mainRef.current) mainRef.current.scrollTop = catalogoScrollRef.current;
+                  });
+                }}
               />
             )}
             {tab === 'catalogo' && catalogoView === 'edit' && editingPlato && (
@@ -240,7 +254,13 @@ export default function App() {
                 ingredientes={ingredientes}
                 categorias={categorias}
                 onUpdate={updateReceta}
-                onDone={() => { setEditingPlato(null); setCatalogoView('list'); }}
+                onDone={() => {
+                  setEditingPlato(null);
+                  setCatalogoView('list');
+                  requestAnimationFrame(() => {
+                    if (mainRef.current) mainRef.current.scrollTop = catalogoScrollRef.current;
+                  });
+                }}
                 onToast={showToast}
               />
             )}
