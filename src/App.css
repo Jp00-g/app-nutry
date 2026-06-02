@@ -1070,3 +1070,129 @@ label {
   padding: 2px 7px;
 }
 .ing-list-edit { color: var(--text3); font-size: 18px; }
+
+/* ── OTROS SUBTABS ──────────────────────────────────────────────────────── */
+.otros-subtabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 12px;
+}
+
+.otros-subtab {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.otros-subtab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* ── MODAL TABS (extras) ────────────────────────────────────────────────── */
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 10px;
+  flex-shrink: 0;
+}
+
+.modal-tab {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ── EXTRAS SECTION ─────────────────────────────────────────────────────── */
+.extras-section {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.extras-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.extras-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+
+.extras-add-btn {
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+}
+
+.extras-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.extras-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.extras-chip-receta {
+  background: rgba(139,92,246,0.1);
+  border-color: rgba(139,92,246,0.3);
+  color: var(--accent3);
+}
+
+.extras-chip-otro {
+  background: rgba(34,211,238,0.08);
+  border-color: rgba(34,211,238,0.25);
+  color: #22d3ee;
+}
+
+.extras-chip-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.extras-chip-remove:active { opacity: 1; }

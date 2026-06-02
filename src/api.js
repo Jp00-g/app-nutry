@@ -91,6 +91,31 @@ export const api = {
 
   deleteIngrediente: (id) => deleteDoc(doc(db, 'ingredientes', id)),
 
+  getOtros: () => getDocs(collection(db, 'otros')).then(toArr),
+
+  addOtro: async (data) => {
+    const ref = await addDoc(collection(db, 'otros'), data);
+    return { id: ref.id };
+  },
+
+  updateOtro: (id, data) => updateDoc(doc(db, 'otros', id), data),
+
+  deleteOtro: (id) => deleteDoc(doc(db, 'otros', id)),
+
+  getCategoriasOtros: () =>
+    getDocs(collection(db, 'categoriasOtros')).then(snap =>
+      toArr(snap).sort((a, b) => a.nombre.localeCompare(b.nombre))
+    ),
+
+  addCategoriaOtros: async (data) => {
+    const ref = await addDoc(collection(db, 'categoriasOtros'), data);
+    return { id: ref.id };
+  },
+
+  updateCategoriaOtros: (id, data) => updateDoc(doc(db, 'categoriasOtros', id), data),
+
+  deleteCategoriaOtros: (id) => deleteDoc(doc(db, 'categoriasOtros', id)),
+
   updateRecetaIngredientes: async (platoId, ingredientes) => {
     const q = query(collection(db, 'recetas'), where('idPlato', '==', platoId));
     const snap = await getDocs(q);

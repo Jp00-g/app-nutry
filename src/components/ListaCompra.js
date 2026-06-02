@@ -81,7 +81,7 @@ function SemanaCard({ weekNum, lista }) {
         <div>
           <span className="semana-card-title">Semana {weekNum}</span>
           <span className="semana-card-count">
-            {lista.length > 0 ? `${lista.length} ingredientes` : 'Sin planificar'}
+            {lista.length > 0 ? `${lista.length} productos` : 'Sin planificar'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

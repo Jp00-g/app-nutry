@@ -9,7 +9,7 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
-  const [personasStep, setPersonasStep] = useState(null); // { id, personas }
+  const [personasStep, setPersonasStep] = useState(null);
 
   const openModal = (dia, momento) => {
     setSearch('');
@@ -183,8 +183,167 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
   );
 }
 
-export default function PlanSemanal({ plans, platos, dias, momentos, categorias, onUpdate, onClear, getPlatoById }) {
-  const [confirmClear, setConfirmClear] = useState(null); // weekIdx
+function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState('recetas');
+  const [search, setSearch] = useState('');
+  const [personasStep, setPersonasStep] = useState(null);
+
+  const recetasExtras = extras?.recetas || [];
+  const otrosExtras = extras?.otros || [];
+
+  const openModal = () => {
+    setModalOpen(true);
+    setSearch('');
+    setModalTab('recetas');
+    setPersonasStep(null);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setPersonasStep(null);
+  };
+
+  const addReceta = (plato) => {
+    setPersonasStep({ id: plato.id, nombre: plato.nombre, personas: 1 });
+  };
+
+  const confirmReceta = () => {
+    onUpdate(weekIdx, {
+      recetas: [...recetasExtras, { id: personasStep.id, nombre: personasStep.nombre, personas: personasStep.personas }],
+      otros: otrosExtras,
+    });
+    closeModal();
+  };
+
+  const addOtro = (otro) => {
+    onUpdate(weekIdx, {
+      recetas: recetasExtras,
+      otros: [...otrosExtras, { id: otro.id, nombre: otro.nombre, categoria: otro.categoria || '', ubicacion: otro.ubicacion || 'Supermercado' }],
+    });
+    closeModal();
+  };
+
+  const removeReceta = (idx) => {
+    onUpdate(weekIdx, { recetas: recetasExtras.filter((_, i) => i !== idx), otros: otrosExtras });
+  };
+
+  const removeOtro = (idx) => {
+    onUpdate(weekIdx, { recetas: recetasExtras, otros: otrosExtras.filter((_, i) => i !== idx) });
+  };
+
+  const filteredPlatos = platos.filter(p => p.nombre.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const filteredOtros = otros.filter(o => o.nombre.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const hasExtras = recetasExtras.length > 0 || otrosExtras.length > 0;
+
+  return (
+    <div className="extras-section">
+      <div className="extras-header">
+        <span className="extras-title">Extra</span>
+        <button className="btn-secondary extras-add-btn" onClick={openModal}>+ Añadir</button>
+      </div>
+
+      {hasExtras && (
+        <div className="extras-chips">
+          {recetasExtras.map((r, i) => (
+            <div key={`r-${i}`} className="extras-chip extras-chip-receta">
+              <span>{r.nombre}{r.personas > 1 ? ` ×${r.personas}` : ''}</span>
+              <button className="extras-chip-remove" onClick={() => removeReceta(i)}>✕</button>
+            </div>
+          ))}
+          {otrosExtras.map((o, i) => (
+            <div key={`o-${i}`} className="extras-chip extras-chip-otro">
+              <span>{o.nombre}</span>
+              <button className="extras-chip-remove" onClick={() => removeOtro(i)}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {modalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <div className="modal-header">
+              <span className="modal-title">
+                {personasStep && (
+                  <button className="modal-back" onClick={() => setPersonasStep(null)}>←</button>
+                )}
+                Añadir extra
+              </span>
+              <button className="modal-close" onClick={closeModal}>✕</button>
+            </div>
+
+            {personasStep ? (
+              <div className="personas-step">
+                <p className="personas-step-plato">{personasStep.nombre}</p>
+                <p className="personas-step-label">¿Para cuántas personas?</p>
+                <div className="personas-counter">
+                  <button className="personas-counter-btn" onClick={() => setPersonasStep(s => ({ ...s, personas: Math.max(1, s.personas - 1) }))}>−</button>
+                  <span className="personas-counter-val">{personasStep.personas}</span>
+                  <button className="personas-counter-btn" onClick={() => setPersonasStep(s => ({ ...s, personas: Math.min(20, s.personas + 1) }))}>+</button>
+                </div>
+                <button className="btn-primary personas-confirm" onClick={confirmReceta}>Confirmar</button>
+              </div>
+            ) : (
+              <>
+                <div className="modal-tabs">
+                  <button
+                    className={`modal-tab ${modalTab === 'recetas' ? 'active' : ''}`}
+                    onClick={() => { setModalTab('recetas'); setSearch(''); }}
+                  >
+                    🍽️ Recetas
+                  </button>
+                  <button
+                    className={`modal-tab ${modalTab === 'otros' ? 'active' : ''}`}
+                    onClick={() => { setModalTab('otros'); setSearch(''); }}
+                  >
+                    📦 Otros
+                  </button>
+                </div>
+                <div className="modal-search">
+                  <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder={modalTab === 'recetas' ? 'Buscar receta…' : 'Buscar objeto…'}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="modal-list">
+                  {modalTab === 'recetas' ? (
+                    filteredPlatos.length > 0
+                      ? filteredPlatos.map(p => (
+                          <div key={p.id} className="plato-option" onClick={() => addReceta(p)}>
+                            <span className="plato-option-name">{p.nombre}</span>
+                          </div>
+                        ))
+                      : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>Sin resultados</p>
+                  ) : (
+                    filteredOtros.length > 0
+                      ? filteredOtros.map(o => (
+                          <div key={o.id} className="plato-option" onClick={() => addOtro(o)}>
+                            <span className="plato-option-name">{o.nombre}</span>
+                            {o.categoria && <span style={{ color: 'var(--text3)', fontSize: 12, flexShrink: 0 }}>{o.categoria}</span>}
+                          </div>
+                        ))
+                      : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
+                          {otros.length === 0 ? 'Ve a la pestaña Otros para añadir objetos.' : 'Sin resultados'}
+                        </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function PlanSemanal({ plans, platos, dias, momentos, categorias, otros, onUpdate, onClear, onUpdateExtras, getPlatoById }) {
+  const [confirmClear, setConfirmClear] = useState(null);
 
   return (
     <>
@@ -213,6 +372,13 @@ export default function PlanSemanal({ plans, platos, dias, momentos, categorias,
             onUpdate={onUpdate}
             getPlatoById={getPlatoById}
           />
+          <ExtrasSection
+            weekIdx={i}
+            extras={plan.extras}
+            platos={platos}
+            otros={otros}
+            onUpdate={onUpdateExtras}
+          />
         </div>
       ))}
 
@@ -221,7 +387,7 @@ export default function PlanSemanal({ plans, platos, dias, momentos, categorias,
           <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
             <div className="confirm-title">¿Limpiar semana {confirmClear + 1}?</div>
             <div className="confirm-body">
-              Se eliminarán todos los platos de la semana. Esta acción no se puede deshacer.
+              Se eliminarán todos los platos y extras de la semana. Esta acción no se puede deshacer.
             </div>
             <div className="confirm-btns">
               <button className="btn-secondary" onClick={() => setConfirmClear(null)}>Cancelar</button>
