@@ -183,7 +183,7 @@ function SemanaGrid({ weekIdx, plan, platos, dias, momentos, categorias, onUpdat
   );
 }
 
-function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
+function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('recetas');
   const [search, setSearch] = useState('');
@@ -191,6 +191,7 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
 
   const recetasExtras = extras?.recetas || [];
   const otrosExtras = extras?.otros || [];
+  const ingredientesExtras = extras?.ingredientes || [];
 
   const openModal = () => {
     setModalOpen(true);
@@ -212,6 +213,7 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
     onUpdate(weekIdx, {
       recetas: [...recetasExtras, { id: personasStep.id, nombre: personasStep.nombre, personas: personasStep.personas }],
       otros: otrosExtras,
+      ingredientes: ingredientesExtras,
     });
     closeModal();
   };
@@ -220,23 +222,39 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
     onUpdate(weekIdx, {
       recetas: recetasExtras,
       otros: [...otrosExtras, { id: otro.id, nombre: otro.nombre, categoria: otro.categoria || '', ubicacion: otro.ubicacion || 'Supermercado' }],
+      ingredientes: ingredientesExtras,
+    });
+    closeModal();
+  };
+
+  const addIngrediente = (ing) => {
+    onUpdate(weekIdx, {
+      recetas: recetasExtras,
+      otros: otrosExtras,
+      ingredientes: [...ingredientesExtras, { id: ing.id, nombre: ing.nombre }],
     });
     closeModal();
   };
 
   const removeReceta = (idx) => {
-    onUpdate(weekIdx, { recetas: recetasExtras.filter((_, i) => i !== idx), otros: otrosExtras });
+    onUpdate(weekIdx, { recetas: recetasExtras.filter((_, i) => i !== idx), otros: otrosExtras, ingredientes: ingredientesExtras });
   };
 
   const removeOtro = (idx) => {
-    onUpdate(weekIdx, { recetas: recetasExtras, otros: otrosExtras.filter((_, i) => i !== idx) });
+    onUpdate(weekIdx, { recetas: recetasExtras, otros: otrosExtras.filter((_, i) => i !== idx), ingredientes: ingredientesExtras });
+  };
+
+  const removeIngrediente = (idx) => {
+    onUpdate(weekIdx, { recetas: recetasExtras, otros: otrosExtras, ingredientes: ingredientesExtras.filter((_, i) => i !== idx) });
   };
 
   const filteredPlatos = platos.filter(p => p.nombre.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
   const filteredOtros = otros.filter(o => o.nombre.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  const hasExtras = recetasExtras.length > 0 || otrosExtras.length > 0;
+  const filteredIngredientes = (ingredientes || []).filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const hasExtras = recetasExtras.length > 0 || otrosExtras.length > 0 || ingredientesExtras.length > 0;
 
   return (
     <div className="extras-section">
@@ -251,6 +269,12 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
             <div key={`r-${i}`} className="extras-chip extras-chip-receta">
               <span>{r.nombre}{r.personas > 1 ? ` ×${r.personas}` : ''}</span>
               <button className="extras-chip-remove" onClick={() => removeReceta(i)}>✕</button>
+            </div>
+          ))}
+          {ingredientesExtras.map((ing, i) => (
+            <div key={`ing-${i}`} className="extras-chip extras-chip-ingrediente">
+              <span>{ing.nombre}</span>
+              <button className="extras-chip-remove" onClick={() => removeIngrediente(i)}>✕</button>
             </div>
           ))}
           {otrosExtras.map((o, i) => (
@@ -297,6 +321,12 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
                     🍽️ Recetas
                   </button>
                   <button
+                    className={`modal-tab ${modalTab === 'ingredientes' ? 'active' : ''}`}
+                    onClick={() => { setModalTab('ingredientes'); setSearch(''); }}
+                  >
+                    🥑 Ingredientes
+                  </button>
+                  <button
                     className={`modal-tab ${modalTab === 'otros' ? 'active' : ''}`}
                     onClick={() => { setModalTab('otros'); setSearch(''); }}
                   >
@@ -307,7 +337,7 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
                   <input
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    placeholder={modalTab === 'recetas' ? 'Buscar receta…' : 'Buscar objeto…'}
+                    placeholder={modalTab === 'recetas' ? 'Buscar receta…' : modalTab === 'ingredientes' ? 'Buscar ingrediente…' : 'Buscar objeto…'}
                     autoComplete="off"
                   />
                 </div>
@@ -320,6 +350,16 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
                           </div>
                         ))
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>Sin resultados</p>
+                  ) : modalTab === 'ingredientes' ? (
+                    filteredIngredientes.length > 0
+                      ? filteredIngredientes.map(ing => (
+                          <div key={ing.id} className="plato-option" onClick={() => addIngrediente(ing)}>
+                            <span className="plato-option-name">{ing.nombre}</span>
+                          </div>
+                        ))
+                      : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
+                          {(ingredientes || []).length === 0 ? 'Ve a la pestaña Ingred. para añadir ingredientes.' : 'Sin resultados'}
+                        </p>
                   ) : (
                     filteredOtros.length > 0
                       ? filteredOtros.map(o => (
@@ -342,7 +382,7 @@ function ExtrasSection({ weekIdx, extras, platos, otros, onUpdate }) {
   );
 }
 
-export default function PlanSemanal({ plans, platos, dias, momentos, categorias, otros, onUpdate, onClear, onUpdateExtras, getPlatoById }) {
+export default function PlanSemanal({ plans, platos, dias, momentos, categorias, otros, ingredientes, onUpdate, onClear, onUpdateExtras, getPlatoById }) {
   const [confirmClear, setConfirmClear] = useState(null);
 
   return (
@@ -377,6 +417,7 @@ export default function PlanSemanal({ plans, platos, dias, momentos, categorias,
             extras={plan.extras}
             platos={platos}
             otros={otros}
+            ingredientes={ingredientes}
             onUpdate={onUpdateExtras}
           />
         </div>

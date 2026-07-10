@@ -1177,6 +1177,12 @@ label {
   color: var(--accent3);
 }
 
+.extras-chip-ingrediente {
+  background: rgba(52,211,153,0.1);
+  border-color: rgba(52,211,153,0.3);
+  color: #34d399;
+}
+
 .extras-chip-otro {
   background: rgba(34,211,238,0.08);
   border-color: rgba(34,211,238,0.25);

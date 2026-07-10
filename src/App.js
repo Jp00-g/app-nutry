@@ -276,6 +276,7 @@ export default function App() {
                 momentos={MOMENTOS}
                 categorias={categorias}
                 otros={otros}
+                ingredientes={ingredientes}
                 onUpdate={updatePlan}
                 onClear={clearPlan}
                 onUpdateExtras={updateExtras}
