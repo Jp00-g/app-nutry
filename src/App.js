@@ -9,7 +9,7 @@ import Ingredientes from './components/Ingredientes';
 import Otros from './components/Otros';
 import './App.css';
 
-const DIAS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const DIAS = ['Sábado', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 const MOMENTOS = ['Desayuno', 'Comida', 'Cena'];
 
 const NAV = [
