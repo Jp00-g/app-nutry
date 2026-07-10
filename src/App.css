@@ -694,6 +694,24 @@ label {
   -webkit-overflow-scrolling: touch;
 }
 
+.modal-list .compra-cat-title {
+  position: sticky;
+  top: 0;
+  background: var(--bg2);
+  padding-top: 12px;
+}
+
+.modal-confirm-bar {
+  padding: 10px 16px 4px;
+  flex-shrink: 0;
+}
+
+.modal-confirm-btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+}
+
 .plato-option {
   display: flex;
   align-items: center;

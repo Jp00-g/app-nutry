@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 
 const MOMENTO_MAP = { 'Desayuno': 'Desayunos', 'Comida': 'Comidas', 'Cena': 'Cenas' };
 
@@ -187,22 +187,47 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('recetas');
   const [search, setSearch] = useState('');
+  const [ingCatFilter, setIngCatFilter] = useState('Todo');
   const [personasStep, setPersonasStep] = useState(null);
+  const [cantidadStep, setCantidadStep] = useState(null);
+  const [pendingRecetas, setPendingRecetas] = useState([]);
+  const [pendingOtros, setPendingOtros] = useState([]);
+  const [pendingIngredientes, setPendingIngredientes] = useState([]);
 
   const recetasExtras = extras?.recetas || [];
   const otrosExtras = extras?.otros || [];
   const ingredientesExtras = extras?.ingredientes || [];
 
+  const totalPending = pendingRecetas.length + pendingOtros.length + pendingIngredientes.length;
+
   const openModal = () => {
     setModalOpen(true);
     setSearch('');
     setModalTab('recetas');
+    setIngCatFilter('Todo');
     setPersonasStep(null);
+    setCantidadStep(null);
+    setPendingRecetas([]);
+    setPendingOtros([]);
+    setPendingIngredientes([]);
   };
 
   const closeModal = () => {
     setModalOpen(false);
     setPersonasStep(null);
+    setCantidadStep(null);
+    setPendingRecetas([]);
+    setPendingOtros([]);
+    setPendingIngredientes([]);
+  };
+
+  const confirmAll = () => {
+    onUpdate(weekIdx, {
+      recetas: [...recetasExtras, ...pendingRecetas],
+      otros: [...otrosExtras, ...pendingOtros],
+      ingredientes: [...ingredientesExtras, ...pendingIngredientes],
+    });
+    closeModal();
   };
 
   const addReceta = (plato) => {
@@ -210,30 +235,31 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
   };
 
   const confirmReceta = () => {
-    onUpdate(weekIdx, {
-      recetas: [...recetasExtras, { id: personasStep.id, nombre: personasStep.nombre, personas: personasStep.personas }],
-      otros: otrosExtras,
-      ingredientes: ingredientesExtras,
-    });
-    closeModal();
+    setPendingRecetas(prev => [...prev, { id: personasStep.id, nombre: personasStep.nombre, personas: personasStep.personas }]);
+    setPersonasStep(null);
   };
 
-  const addOtro = (otro) => {
-    onUpdate(weekIdx, {
-      recetas: recetasExtras,
-      otros: [...otrosExtras, { id: otro.id, nombre: otro.nombre, categoria: otro.categoria || '', ubicacion: otro.ubicacion || 'Supermercado' }],
-      ingredientes: ingredientesExtras,
-    });
-    closeModal();
+  const toggleOtro = (otro) => {
+    setPendingOtros(prev =>
+      prev.some(o => o.id === otro.id)
+        ? prev.filter(o => o.id !== otro.id)
+        : [...prev, { id: otro.id, nombre: otro.nombre, categoria: otro.categoria || '', ubicacion: otro.ubicacion || 'Supermercado' }]
+    );
   };
 
-  const addIngrediente = (ing) => {
-    onUpdate(weekIdx, {
-      recetas: recetasExtras,
-      otros: otrosExtras,
-      ingredientes: [...ingredientesExtras, { id: ing.id, nombre: ing.nombre }],
-    });
-    closeModal();
+  const startCantidadStep = (ing) => {
+    setCantidadStep({ id: ing.id, nombre: ing.nombre, unidad: ing.unidad || '', cantidad: '' });
+  };
+
+  const confirmIngrediente = () => {
+    const cant = parseFloat(String(cantidadStep.cantidad).replace(',', '.'));
+    setPendingIngredientes(prev => [...prev, {
+      id: cantidadStep.id,
+      nombre: cantidadStep.nombre,
+      unidad: cantidadStep.unidad,
+      cantidad: isNaN(cant) ? 0 : cant,
+    }]);
+    setCantidadStep(null);
   };
 
   const removeReceta = (idx) => {
@@ -252,8 +278,11 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
   const filteredOtros = otros.filter(o => o.nombre.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  const groupedIngredientes = useMemo(() => {
-    const filtered = (ingredientes || []).filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()));
+  const ingCats = ['Todo', ...Array.from(new Set((ingredientes || []).map(i => i.categoria).filter(Boolean))).sort()];
+  const groupedIngredientes = (() => {
+    const filtered = (ingredientes || [])
+      .filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()))
+      .filter(i => ingCatFilter === 'Todo' || i.categoria === ingCatFilter);
     const map = filtered.reduce((acc, ing) => {
       const cat = ing.categoria || 'Sin categoría';
       if (!acc[cat]) acc[cat] = [];
@@ -263,7 +292,7 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([cat, ings]) => [cat, ings.sort((a, b) => a.nombre.localeCompare(b.nombre))]);
-  }, [ingredientes, search]);
+  })();
   const hasExtras = recetasExtras.length > 0 || otrosExtras.length > 0 || ingredientesExtras.length > 0;
 
   return (
@@ -302,8 +331,8 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
             <div className="modal-handle" />
             <div className="modal-header">
               <span className="modal-title">
-                {personasStep && (
-                  <button className="modal-back" onClick={() => setPersonasStep(null)}>←</button>
+                {(personasStep || cantidadStep) && (
+                  <button className="modal-back" onClick={() => { setPersonasStep(null); setCantidadStep(null); }}>←</button>
                 )}
                 Añadir extra
               </span>
@@ -321,24 +350,44 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
                 </div>
                 <button className="btn-primary personas-confirm" onClick={confirmReceta}>Confirmar</button>
               </div>
+            ) : cantidadStep ? (
+              <div className="personas-step">
+                <p className="personas-step-plato">{cantidadStep.nombre}</p>
+                <p className="personas-step-label">¿Qué cantidad?</p>
+                <div className="personas-counter">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={cantidadStep.cantidad}
+                    onChange={e => setCantidadStep(s => ({ ...s, cantidad: e.target.value }))}
+                    placeholder="0"
+                    style={{ width: 80, textAlign: 'center', fontSize: 24, fontWeight: 700, background: 'transparent', border: 'none', borderBottom: '2px solid var(--accent)', color: 'var(--text)', outline: 'none' }}
+                  />
+                  {cantidadStep.unidad && (
+                    <span className="personas-counter-val" style={{ minWidth: 'auto', paddingLeft: 8 }}>{cantidadStep.unidad}</span>
+                  )}
+                </div>
+                <button className="btn-primary personas-confirm" onClick={confirmIngrediente}>Confirmar</button>
+              </div>
             ) : (
               <>
                 <div className="modal-tabs">
                   <button
                     className={`modal-tab ${modalTab === 'recetas' ? 'active' : ''}`}
-                    onClick={() => { setModalTab('recetas'); setSearch(''); }}
+                    onClick={() => { setModalTab('recetas'); setSearch(''); setIngCatFilter('Todo'); }}
                   >
                     🍽️ Recetas
                   </button>
                   <button
                     className={`modal-tab ${modalTab === 'ingredientes' ? 'active' : ''}`}
-                    onClick={() => { setModalTab('ingredientes'); setSearch(''); }}
+                    onClick={() => { setModalTab('ingredientes'); setSearch(''); setIngCatFilter('Todo'); }}
                   >
                     🥑 Ingredientes
                   </button>
                   <button
                     className={`modal-tab ${modalTab === 'otros' ? 'active' : ''}`}
-                    onClick={() => { setModalTab('otros'); setSearch(''); }}
+                    onClick={() => { setModalTab('otros'); setSearch(''); setIngCatFilter('Todo'); }}
                   >
                     📦 Otros
                   </button>
@@ -351,25 +400,46 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
                     autoComplete="off"
                   />
                 </div>
+                {modalTab === 'ingredientes' && ingCats.length > 1 && (
+                  <div className="modal-cats">
+                    {ingCats.map(c => (
+                      <button
+                        key={c}
+                        className={`cat-filter ${ingCatFilter === c ? 'active' : ''}`}
+                        onClick={() => setIngCatFilter(c)}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="modal-list">
                   {modalTab === 'recetas' ? (
                     filteredPlatos.length > 0
-                      ? filteredPlatos.map(p => (
-                          <div key={p.id} className="plato-option" onClick={() => addReceta(p)}>
-                            <span className="plato-option-name">{p.nombre}</span>
-                          </div>
-                        ))
+                      ? filteredPlatos.map(p => {
+                          const sel = pendingRecetas.some(r => r.id === p.id);
+                          return (
+                            <div key={p.id} className={`plato-option ${sel ? 'selected' : ''}`} onClick={() => addReceta(p)}>
+                              <span className="plato-option-name">{p.nombre}</span>
+                              {sel && <span className="plato-option-check">✓</span>}
+                            </div>
+                          );
+                        })
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>Sin resultados</p>
                   ) : modalTab === 'ingredientes' ? (
                     groupedIngredientes.length > 0
                       ? groupedIngredientes.map(([cat, ings]) => (
                           <div key={cat}>
                             <div className="compra-cat-title">{cat}</div>
-                            {ings.map(ing => (
-                              <div key={ing.id} className="plato-option" onClick={() => addIngrediente(ing)}>
-                                <span className="plato-option-name">{ing.nombre}</span>
-                              </div>
-                            ))}
+                            {ings.map(ing => {
+                              const sel = pendingIngredientes.some(i => i.id === ing.id);
+                              return (
+                                <div key={ing.id} className={`plato-option ${sel ? 'selected' : ''}`} onClick={() => !sel && startCantidadStep(ing)}>
+                                  <span className="plato-option-name">{ing.nombre}</span>
+                                  {sel && <span className="plato-option-check">✓</span>}
+                                </div>
+                              );
+                            })}
                           </div>
                         ))
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
@@ -377,17 +447,30 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
                         </p>
                   ) : (
                     filteredOtros.length > 0
-                      ? filteredOtros.map(o => (
-                          <div key={o.id} className="plato-option" onClick={() => addOtro(o)}>
-                            <span className="plato-option-name">{o.nombre}</span>
-                            {o.categoria && <span style={{ color: 'var(--text3)', fontSize: 12, flexShrink: 0 }}>{o.categoria}</span>}
-                          </div>
-                        ))
+                      ? filteredOtros.map(o => {
+                          const sel = pendingOtros.some(x => x.id === o.id);
+                          return (
+                            <div key={o.id} className={`plato-option ${sel ? 'selected' : ''}`} onClick={() => toggleOtro(o)}>
+                              <span className="plato-option-name">{o.nombre}</span>
+                              {sel
+                                ? <span className="plato-option-check">✓</span>
+                                : o.categoria && <span style={{ color: 'var(--text3)', fontSize: 12, flexShrink: 0 }}>{o.categoria}</span>
+                              }
+                            </div>
+                          );
+                        })
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>
                           {otros.length === 0 ? 'Ve a la pestaña Otros para añadir objetos.' : 'Sin resultados'}
                         </p>
                   )}
                 </div>
+                {totalPending > 0 && (
+                  <div className="modal-confirm-bar">
+                    <button className="btn-primary modal-confirm-btn" onClick={confirmAll}>
+                      Añadir ({totalPending})
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>

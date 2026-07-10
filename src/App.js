@@ -257,6 +257,16 @@ export default function App() {
       }
     });
 
+    (plan.extras?.ingredientes || []).forEach(item => {
+      const key = item.nombre;
+      const ing = ingredientes.find(i => String(i.id) === String(item.id));
+      const cant = parseFloat(item.cantidad) || 0;
+      if (!totales[key]) {
+        totales[key] = { nombre: item.nombre, unidad: item.unidad || ing?.unidad || '', cantidad: 0, categoria: ing?.categoria || 'Otros', ubicacion: ing?.ubicacion || 'Supermercado' };
+      }
+      totales[key].cantidad += cant;
+    });
+
     return Object.values(totales).sort((a, b) => a.categoria.localeCompare(b.categoria));
   }, [recetas, ingredientes]);
 
