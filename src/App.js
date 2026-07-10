@@ -37,6 +37,7 @@ export default function App() {
   const [categorias, setCategorias] = useState([]);
   const [otros, setOtros] = useState([]);
   const [categoriasOtros, setCategoriasOtros] = useState([]);
+  const [categoriasIngredientes, setCategoriasIngredientes] = useState([]);
   const [plans, setPlans] = useState([emptyPlan(), emptyPlan(), emptyPlan(), emptyPlan()]);
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -57,13 +58,14 @@ export default function App() {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const [p, i, r, cats, otr, catOtr, pl1, pl2, pl3, pl4] = await Promise.all([
+      const [p, i, r, cats, otr, catOtr, catIng, pl1, pl2, pl3, pl4] = await Promise.all([
         api.getPlatos(),
         api.getIngredientes(),
         api.getRecetas(),
         api.getCategorias(),
         api.getOtros(),
         api.getCategoriasOtros(),
+        api.getCategoriasIngredientes(),
         api.getPlanSemana(1),
         api.getPlanSemana(2),
         api.getPlanSemana(3),
@@ -75,6 +77,7 @@ export default function App() {
       setCategorias(cats || []);
       setOtros(otr || []);
       setCategoriasOtros(catOtr || []);
+      setCategoriasIngredientes(catIng || []);
       setPlans([pl1, pl2, pl3, pl4].map(pl => {
         const base = emptyPlan();
         if (pl) {
@@ -140,12 +143,12 @@ export default function App() {
 
   const updateIngrediente = async (id, data) => {
     await api.updateIngrediente(id, data);
-    await loadData();
+    await loadData(true);
   };
 
   const addIngrediente = async (data) => {
     await api.addIngrediente(data);
-    await loadData();
+    await loadData(true);
   };
 
   const deletePlato = async (id) => {
@@ -191,6 +194,21 @@ export default function App() {
 
   const deleteCategoriaOtros = async (id) => {
     await api.deleteCategoriaOtros(id);
+    await loadData(true);
+  };
+
+  const addCategoriaIngredientes = async (data) => {
+    await api.addCategoriaIngredientes(data);
+    await loadData(true);
+  };
+
+  const updateCategoriaIngredientes = async (id, data, oldNombre) => {
+    await api.updateCategoriaIngredientes(id, data, oldNombre);
+    await loadData(true);
+  };
+
+  const deleteCategoriaIngredientes = async (id, nombre) => {
+    await api.deleteCategoriaIngredientes(id, nombre);
     await loadData(true);
   };
 
@@ -342,6 +360,7 @@ export default function App() {
             {tab === 'ingredientes' && (
               <Ingredientes
                 ingredientes={ingredientes}
+                categoriasIngredientes={categoriasIngredientes}
                 onUpdate={updateIngrediente}
                 onAdd={addIngrediente}
                 onDelete={deleteIngrediente}
@@ -351,12 +370,16 @@ export default function App() {
               <Otros
                 otros={otros}
                 categoriasOtros={categoriasOtros}
+                categoriasIngredientes={categoriasIngredientes}
                 onUpdate={updateOtro}
                 onAdd={addOtro}
                 onDelete={deleteOtro}
                 onAddCat={addCategoriaOtros}
                 onUpdateCat={updateCategoriaOtros}
                 onDeleteCat={deleteCategoriaOtros}
+                onAddCatIng={addCategoriaIngredientes}
+                onUpdateCatIng={updateCategoriaIngredientes}
+                onDeleteCatIng={deleteCategoriaIngredientes}
               />
             )}
           </>

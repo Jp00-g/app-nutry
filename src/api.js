@@ -7,6 +7,12 @@ import { db } from './firebase';
 
 const toArr = (snap) => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+const DEFAULT_CATEGORIAS_INGREDIENTES = [
+  'Aceites y grasas', 'Carnes', 'Condimentos y especias', 'Dulce',
+  'Frutas', 'Lácteos', 'Legumbres', 'Pan y cereales',
+  'Pescados y mariscos', 'Verduras y hortalizas',
+];
+
 const DEFAULT_CATEGORIAS = [
   { nombre: 'CARNES',          momentos: ['Comidas', 'Cenas'],              colorClass: 'cat-carnes',    orden: 1  },
   { nombre: 'ENSALADAS',       momentos: ['Comidas', 'Cenas'],              colorClass: 'cat-ensaladas', orden: 2  },
@@ -115,6 +121,49 @@ export const api = {
   updateCategoriaOtros: (id, data) => updateDoc(doc(db, 'categoriasOtros', id), data),
 
   deleteCategoriaOtros: (id) => deleteDoc(doc(db, 'categoriasOtros', id)),
+
+  getCategoriasIngredientes: async () => {
+    const snap = await getDocs(collection(db, 'categoriasIngredientes'));
+    if (!snap.empty) return toArr(snap).sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const batch = writeBatch(db);
+    DEFAULT_CATEGORIAS_INGREDIENTES.forEach(nombre =>
+      batch.set(doc(collection(db, 'categoriasIngredientes')), { nombre })
+    );
+    await batch.commit();
+    const fresh = await getDocs(collection(db, 'categoriasIngredientes'));
+    return toArr(fresh).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  },
+
+  addCategoriaIngredientes: async (data) => {
+    const ref = await addDoc(collection(db, 'categoriasIngredientes'), data);
+    return { id: ref.id };
+  },
+
+  updateCategoriaIngredientes: async (id, data, oldNombre) => {
+    await updateDoc(doc(db, 'categoriasIngredientes', id), data);
+    if (oldNombre && data.nombre && oldNombre !== data.nombre) {
+      const q = query(collection(db, 'ingredientes'), where('categoria', '==', oldNombre));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.update(d.ref, { categoria: data.nombre }));
+        await batch.commit();
+      }
+    }
+  },
+
+  deleteCategoriaIngredientes: async (id, nombre) => {
+    await deleteDoc(doc(db, 'categoriasIngredientes', id));
+    if (nombre) {
+      const q = query(collection(db, 'ingredientes'), where('categoria', '==', nombre));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.update(d.ref, { categoria: '' }));
+        await batch.commit();
+      }
+    }
+  },
 
   updateRecetaIngredientes: async (platoId, ingredientes) => {
     const q = query(collection(db, 'recetas'), where('idPlato', '==', platoId));

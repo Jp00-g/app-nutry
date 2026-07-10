@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 
-export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelete, onAddCat, onUpdateCat, onDeleteCat }) {
+export default function Otros({ otros, categoriasOtros, categoriasIngredientes, onUpdate, onAdd, onDelete, onAddCat, onUpdateCat, onDeleteCat, onAddCatIng, onUpdateCatIng, onDeleteCatIng }) {
   const [subTab, setSubTab] = useState('items');
 
   // Items state
@@ -14,13 +14,21 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
   const [deleting, setDeleting] = useState(false);
   const savedScroll = useRef(0);
 
-  // Categorías state
+  // Categorías objetos state
   const [catView, setCatView] = useState('list');
   const [editingCat, setEditingCat] = useState(null);
   const [catForm, setCatForm] = useState({ nombre: '' });
   const [savingCat, setSavingCat] = useState(false);
   const [confirmDeleteCat, setConfirmDeleteCat] = useState(false);
   const [deletingCat, setDeletingCat] = useState(false);
+
+  // Categorías ingredientes state
+  const [ingCatView, setIngCatView] = useState('list');
+  const [editingIngCat, setEditingIngCat] = useState(null);
+  const [ingCatForm, setIngCatForm] = useState({ nombre: '' });
+  const [savingIngCat, setSavingIngCat] = useState(false);
+  const [confirmDeleteIngCat, setConfirmDeleteIngCat] = useState(false);
+  const [deletingIngCat, setDeletingIngCat] = useState(false);
 
   const backToList = () => {
     setView('list');
@@ -132,6 +140,45 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
       alert('Error: ' + e.message);
     } finally {
       setDeletingCat(false);
+    }
+  };
+
+  const openEditIngCat = (cat) => {
+    setIngCatForm({ nombre: cat.nombre });
+    setEditingIngCat(cat);
+    setIngCatView('edit');
+  };
+
+  const openAddIngCat = () => {
+    setIngCatForm({ nombre: '' });
+    setEditingIngCat(null);
+    setIngCatView('add');
+  };
+
+  const handleSaveIngCat = async () => {
+    if (!ingCatForm.nombre.trim()) return;
+    setSavingIngCat(true);
+    try {
+      if (ingCatView === 'edit') await onUpdateCatIng(editingIngCat.id, ingCatForm, editingIngCat.nombre);
+      else await onAddCatIng(ingCatForm);
+      setIngCatView('list');
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setSavingIngCat(false);
+    }
+  };
+
+  const handleDeleteIngCat = async () => {
+    setDeletingIngCat(true);
+    try {
+      await onDeleteCatIng(editingIngCat.id, editingIngCat.nombre);
+      setConfirmDeleteIngCat(false);
+      setIngCatView('list');
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      setDeletingIngCat(false);
     }
   };
 
@@ -258,6 +305,59 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
     );
   }
 
+  if (ingCatView === 'add' || ingCatView === 'edit') {
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
+          <p className="section-title" style={{ padding: 0, flex: 1 }}>
+            {ingCatView === 'edit' ? 'Editar categoría' : 'Nueva categoría'}
+          </p>
+          <button className="btn-secondary" style={{ padding: '7px 14px', fontSize: 13 }} onClick={() => setIngCatView('list')}>
+            Volver
+          </button>
+        </div>
+        <p className="section-sub">
+          {ingCatView === 'edit' ? 'Modifica el nombre y guarda' : 'Escribe el nombre de la categoría de ingrediente'}
+        </p>
+        <div className="anadir-wrap">
+          <div className="form-group">
+            <label>Nombre</label>
+            <input
+              value={ingCatForm.nombre}
+              onChange={e => setIngCatForm(f => ({ ...f, nombre: e.target.value }))}
+              placeholder="ej. Verduras y hortalizas"
+              autoFocus
+            />
+          </div>
+          <button className="btn-primary" onClick={handleSaveIngCat} disabled={savingIngCat || !ingCatForm.nombre.trim()} style={{ marginTop: 8 }}>
+            {savingIngCat ? 'Guardando…' : ingCatView === 'edit' ? '💾 Guardar cambios' : '✚ Añadir categoría'}
+          </button>
+          {ingCatView === 'edit' && (
+            <button className="btn-danger" onClick={() => setConfirmDeleteIngCat(true)} style={{ marginTop: 8, width: '100%' }}>
+              🗑️ Eliminar categoría
+            </button>
+          )}
+        </div>
+        {confirmDeleteIngCat && (
+          <div className="modal-overlay centered" onClick={() => setConfirmDeleteIngCat(false)}>
+            <div className="confirm-sheet" onClick={e => e.stopPropagation()}>
+              <div className="confirm-title">¿Eliminar categoría?</div>
+              <div className="confirm-body">
+                Se eliminará <strong>{editingIngCat.nombre}</strong>. Los ingredientes de esta categoría quedarán sin categorizar.
+              </div>
+              <div className="confirm-btns">
+                <button className="btn-secondary" onClick={() => setConfirmDeleteIngCat(false)}>Cancelar</button>
+                <button className="btn-danger" onClick={handleDeleteIngCat} disabled={deletingIngCat}>
+                  {deletingIngCat ? 'Eliminando…' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', padding: '8px 20px 4px', gap: 12 }}>
@@ -272,6 +372,11 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
             + Nueva
           </button>
         )}
+        {subTab === 'catIngredientes' && (
+          <button className="btn-primary" style={{ whiteSpace: 'nowrap', padding: '7px 14px', fontSize: 13 }} onClick={openAddIngCat}>
+            + Nueva
+          </button>
+        )}
       </div>
 
       <div className="otros-subtabs">
@@ -279,7 +384,10 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
           Objetos
         </button>
         <button className={`otros-subtab ${subTab === 'categorias' ? 'active' : ''}`} onClick={() => setSubTab('categorias')}>
-          Categorías
+          Cat. objetos
+        </button>
+        <button className={`otros-subtab ${subTab === 'catIngredientes' ? 'active' : ''}`} onClick={() => setSubTab('catIngredientes')}>
+          Cat. ingred.
         </button>
       </div>
 
@@ -322,6 +430,21 @@ export default function Otros({ otros, categoriasOtros, onUpdate, onAdd, onDelet
           )}
           {[...categoriasOtros].sort((a, b) => a.nombre.localeCompare(b.nombre)).map(cat => (
             <div key={cat.id} className="ing-list-row" onClick={() => openEditCat(cat)}>
+              <span className="ing-list-nombre">{cat.nombre}</span>
+              <span className="ing-list-edit">›</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {subTab === 'catIngredientes' && (
+        <div className="catalogo-wrap">
+          <p className="section-sub" style={{ padding: '0 0 12px' }}>{(categoriasIngredientes || []).length} categorías</p>
+          {(categoriasIngredientes || []).length === 0 && (
+            <div className="compra-empty"><p>Sin categorías aún</p></div>
+          )}
+          {[...(categoriasIngredientes || [])].sort((a, b) => a.nombre.localeCompare(b.nombre)).map(cat => (
+            <div key={cat.id} className="ing-list-row" onClick={() => openEditIngCat(cat)}>
               <span className="ing-list-nombre">{cat.nombre}</span>
               <span className="ing-list-edit">›</span>
             </div>

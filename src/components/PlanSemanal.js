@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const MOMENTO_MAP = { 'Desayuno': 'Desayunos', 'Comida': 'Comidas', 'Cena': 'Cenas' };
 
@@ -252,8 +252,18 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
   const filteredOtros = otros.filter(o => o.nombre.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
-  const filteredIngredientes = (ingredientes || []).filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const groupedIngredientes = useMemo(() => {
+    const filtered = (ingredientes || []).filter(i => i.nombre.toLowerCase().includes(search.toLowerCase()));
+    const map = filtered.reduce((acc, ing) => {
+      const cat = ing.categoria || 'Sin categoría';
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(ing);
+      return acc;
+    }, {});
+    return Object.entries(map)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([cat, ings]) => [cat, ings.sort((a, b) => a.nombre.localeCompare(b.nombre))]);
+  }, [ingredientes, search]);
   const hasExtras = recetasExtras.length > 0 || otrosExtras.length > 0 || ingredientesExtras.length > 0;
 
   return (
@@ -351,10 +361,15 @@ function ExtrasSection({ weekIdx, extras, platos, otros, ingredientes, onUpdate 
                         ))
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>Sin resultados</p>
                   ) : modalTab === 'ingredientes' ? (
-                    filteredIngredientes.length > 0
-                      ? filteredIngredientes.map(ing => (
-                          <div key={ing.id} className="plato-option" onClick={() => addIngrediente(ing)}>
-                            <span className="plato-option-name">{ing.nombre}</span>
+                    groupedIngredientes.length > 0
+                      ? groupedIngredientes.map(([cat, ings]) => (
+                          <div key={cat}>
+                            <div className="compra-cat-title">{cat}</div>
+                            {ings.map(ing => (
+                              <div key={ing.id} className="plato-option" onClick={() => addIngrediente(ing)}>
+                                <span className="plato-option-name">{ing.nombre}</span>
+                              </div>
+                            ))}
                           </div>
                         ))
                       : <p style={{ color: 'var(--text3)', fontSize: 14, padding: '20px 0', textAlign: 'center' }}>

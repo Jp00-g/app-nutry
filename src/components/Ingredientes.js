@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 
-export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }) {
+export default function Ingredientes({ ingredientes, categoriasIngredientes, onUpdate, onAdd, onDelete }) {
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('Todo');
   const [view, setView] = useState('list'); // 'list' | 'add' | 'edit'
@@ -33,9 +33,11 @@ export default function Ingredientes({ ingredientes, onUpdate, onAdd, onDelete }
   };
 
   const cats = useMemo(() => {
-    const set = new Set(ingredientes.map(i => i.categoria).filter(Boolean));
-    return ['Todo', ...Array.from(set).sort()];
-  }, [ingredientes]);
+    const fromCollection = (categoriasIngredientes || []).map(c => c.nombre).filter(Boolean);
+    const fromData = ingredientes.map(i => i.categoria).filter(Boolean);
+    const merged = Array.from(new Set([...fromCollection, ...fromData])).sort();
+    return ['Todo', ...merged];
+  }, [categoriasIngredientes, ingredientes]);
 
   const filtered = useMemo(() => {
     return ingredientes.filter(i => {
