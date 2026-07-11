@@ -10,6 +10,18 @@ const UBICACION_CONFIG = {
 
 const fmtCant = (n) => parseFloat(n.toFixed(2)).toString();
 
+const roundForExport = (cantidad, unidad) => {
+  const u = (unidad || '').toLowerCase().trim();
+  if (u === 'ud' || u === 'uds') return Math.ceil(cantidad);
+  if (u === 'g')  return Math.ceil(cantidad / 50) * 50;
+  return cantidad;
+};
+
+const fmtCantExport = (cantidad, unidad) => {
+  const rounded = roundForExport(cantidad, unidad);
+  return fmtCant(rounded);
+};
+
 function buildGrouped(lista) {
   const grouped = {};
   lista.forEach(item => {
@@ -31,7 +43,7 @@ function exportText(lista, weekNum) {
     Object.entries(cats).forEach(([cat, items]) => {
       lines.push(`  ── ${cat} ──`);
       items.forEach(i => {
-        const cant = i.cantidad > 0 ? `${fmtCant(i.cantidad)} ${i.unidad}` : '';
+        const cant = i.cantidad > 0 ? `${fmtCantExport(i.cantidad, i.unidad)} ${i.unidad}` : '';
         lines.push(`    • ${i.nombre}${cant ? ` (${cant})` : ''}`);
       });
     });
